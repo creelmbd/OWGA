@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OWGA Golf League - Players</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="scripts.js"></script>
+</head>
+<body>
+  <div id="header"></div>
+  <main>
+    <section class="hero player-hero">
+      <div class="hero-content">
+        <h1>OWGA Players</h1>
+        <p>Meet the dedicated golfers who make up our prestigious league</p>
+      </div>
+    </section>
+
+    <section class="players-section container">
+      <div class="player-controls">
+        <div class="search-container">
+          <input type="text" id="playerSearch" placeholder="Search players..." class="player-search">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="sort-container">
+          <span>Sort by: </span>
+          <select id="playerSort" class="player-sort">
+            <option value="nameAsc">Name (A-Z)</option>
+            <option value="nameDesc">Name (Z-A)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="players-grid" id="playersGrid">
+        <!-- Player cards will be generated via JavaScript -->
+      </div>
+
+      <div id="noResults" class="no-results" style="display: none;">
+        <p>No players found matching your search criteria.</p>
+      </div>
+    </section>
+
+    <section class="player-stats container">
+      <h2>League Statistics</h2>
+      <div class="stats-cards">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value" id="playerCount">22</h3>
+            <p class="stat-label">Active Players</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-trophy"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">7</h3>
+            <p class="stat-label">Tournament Champions</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-golf-ball"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-value">14</h3>
+            <p class="stat-label">Tournaments Per Year</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="footer"></div>
+
+</body>
+</html>
