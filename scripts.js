@@ -1,5 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Main initialization function
+  initSite();
+});
+
+/**
+ * Initialize all site components
+ */
+function initSite() {
   // Load header and footer
+  loadHeaderAndFooter();
+
+  // Initialize page-specific elements
+  if (document.querySelector('.champions-carousel')) {
+    initChampionsCarousel();
+  }
+
+  if (document.getElementById('playersGrid')) {
+    initPlayersSection();
+  }
+
+  // Initialize common elements and effects
+  addParallaxEffect();
+  addGoldParticles();
+  createScrollIndicator();
+}
+
+/**
+ * Load header and footer from external files
+ */
+function loadHeaderAndFooter() {
   fetch('header.html')
     .then(response => response.text())
     .then(html => {
@@ -14,13 +43,41 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById('footer').innerHTML = html;
     })
     .catch(err => console.error('Failed to load footer:', err));
+}
 
-  // Initialize champions carousel if it exists
-  if (document.querySelector('.champions-carousel')) {
-    initializeChampionsCarousel();
-  }
+/**
+ * Initialize navigation menu
+ */
+function initializeNavigation() {
+  const currentPage = window.location.pathname.split('/').pop();
+  const navLinks = document.querySelectorAll('nav ul li a');
 
-  // Add subtle parallax effect to hero section
+  navLinks.forEach(link => {
+    const linkHref = link.getAttribute('href');
+    if (linkHref === currentPage ||
+        (currentPage === '' && linkHref === 'index.html')) {
+      link.classList.add('active');
+      link.style.borderBottom = '2px solid var(--gold-bright)';
+      link.style.color = 'var(--gold-bright)';
+    }
+
+    // Add subtle hover effect
+    link.addEventListener('mouseover', function() {
+      this.style.transform = 'translateY(-2px)';
+    });
+
+    link.addEventListener('mouseout', function() {
+      if (!this.classList.contains('active')) {
+        this.style.transform = 'translateY(0)';
+      }
+    });
+  });
+}
+
+/**
+ * Add parallax effect to hero section
+ */
+function addParallaxEffect() {
   const hero = document.querySelector('.hero');
   if (hero) {
     window.addEventListener('scroll', function() {
@@ -31,320 +88,76 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Add gold accent to current page in navigation
-  function initializeNavigation() {
-    const currentPage = window.location.pathname.split('/').pop();
-    const navLinks = document.querySelectorAll('nav ul li a');
-
-    navLinks.forEach(link => {
-      const linkHref = link.getAttribute('href');
-      if (linkHref === currentPage ||
-          (currentPage === '' && linkHref === 'index.html')) {
-        link.classList.add('active');
-        link.style.borderBottom = '2px solid var(--gold-bright)';
-        link.style.color = 'var(--gold-bright)';
-      }
-
-      // Add subtle hover effect
-      link.addEventListener('mouseover', function() {
-        this.style.transform = 'translateY(-2px)';
-      });
-
-      link.addEventListener('mouseout', function() {
-        if (!this.classList.contains('active')) {
-          this.style.transform = 'translateY(0)';
-        }
-      });
-    });
-  }
-
-  // Add gold shimmer effect to elements with gold-shimmer class
-  const goldElements = document.querySelectorAll('.gold-shimmer');
-  goldElements.forEach(element => {
-    element.addEventListener('mousemove', function(e) {
-      const rect = this.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      this.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(230, 192, 104, 0.4) 0%, rgba(184, 134, 11, 0) 50%)`;
-    });
-
-    element.addEventListener('mouseleave', function() {
-      this.style.background = 'none';
-    });
-  });
-
-  // Add subtle scale effect to info cards
-  const infoCards = document.querySelectorAll('.info-card');
-  infoCards.forEach(card => {
-    card.addEventListener('mouseenter', function() {
-      this.style.transform = 'translateY(-5px)';
-      this.style.boxShadow = '0 15px 40px rgba(0, 0, 0, 0.6)';
-    });
-
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'translateY(0)';
-      this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
-    });
-  });
-
-  // Champions carousel functionality
-  function initializeChampionsCarousel() {
-    const carousel = document.querySelector('.champions-carousel');
-    const cards = document.querySelectorAll('.champion-card');
-    const prevBtn = document.querySelector('.carousel-prev');
-    const nextBtn = document.querySelector('.carousel-next');
-
-    let currentIndex = 0;
-    const cardWidth = cards[0].offsetWidth + 32; // 32px for gap
-
-    if (prevBtn && nextBtn) {
-      prevBtn.addEventListener('click', function() {
-        if (currentIndex > 0) {
-          currentIndex--;
-          carousel.scrollTo({
-            left: currentIndex * cardWidth,
-            behavior: 'smooth'
-          });
-        }
-      });
-
-      nextBtn.addEventListener('click', function() {
-        if (currentIndex < cards.length - 1) {
-          currentIndex++;
-          carousel.scrollTo({
-            left: currentIndex * cardWidth,
-            behavior: 'smooth'
-          });
-        }
-      });
-    }
-
-    // Add 3D tilt effect to champion cards
-    cards.forEach(card => {
-      card.addEventListener('mousemove', function(e) {
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-
-        const rotateX = (y - centerY) / 20;
-        const rotateY = (centerX - x) / 20;
-
-        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
-      });
-
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
-      });
-    });
-  }
-
-  // Add gold shine effect to logos
-  const logos = document.querySelectorAll('.logo');
-  logos.forEach(logo => {
-    logo.addEventListener('mouseenter', function() {
-      this.style.filter = 'drop-shadow(0 0 10px rgba(212, 175, 55, 0.7))';
-      this.style.transform = 'scale(1.05)';
-    });
-
-    logo.addEventListener('mouseleave', function() {
-      this.style.filter = 'drop-shadow(0 0 5px rgba(212, 175, 55, 0.3))';
-      this.style.transform = 'scale(1)';
-    });
-  });
-
   // Add subtle texture to page background on scroll
   window.addEventListener('scroll', function() {
     const scrollPosition = window.scrollY;
     document.body.style.backgroundPosition = `0 ${scrollPosition * 0.1}px`;
   });
-
-  // Create gold badge animation for defending champions section
-  const badges = document.querySelectorAll('.champion-badge');
-  badges.forEach(badge => {
-    badge.innerHTML += '<div class="badge-shine"></div>';
-    const shine = badge.querySelector('.badge-shine');
-
-    shine.style.position = 'absolute';
-    shine.style.top = '0';
-    shine.style.left = '0';
-    shine.style.width = '100%';
-    shine.style.height = '100%';
-    shine.style.background = 'linear-gradient(135deg, transparent 0%, rgba(255, 255, 255, 0) 45%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 55%, transparent 100%)';
-    shine.style.backgroundSize = '250% 250%';
-    shine.style.borderRadius = '50%';
-    shine.style.pointerEvents = 'none';
-
-    setInterval(() => {
-      shine.style.transition = 'all 1.5s ease-in-out';
-      shine.style.backgroundPosition = '100% 100%';
-
-      setTimeout(() => {
-        shine.style.transition = 'none';
-        shine.style.backgroundPosition = '-100% -100%';
-      }, 1500);
-    }, 5000);
-  });
-});
-
-// Create gold particle effect for hero section
-function createGoldParticles() {
-  const hero = document.querySelector('.hero');
-  if (!hero) return;
-
-  const particlesContainer = document.createElement('div');
-  particlesContainer.classList.add('gold-particles');
-  particlesContainer.style.position = 'absolute';
-  particlesContainer.style.top = '0';
-  particlesContainer.style.left = '0';
-  particlesContainer.style.width = '100%';
-  particlesContainer.style.height = '100%';
-  particlesContainer.style.overflow = 'hidden';
-  particlesContainer.style.pointerEvents = 'none';
-  particlesContainer.style.zIndex = '1';
-
-  hero.appendChild(particlesContainer);
-
-  for (let i = 0; i < 30; i++) {
-    createParticle(particlesContainer);
-  }
 }
 
-function createParticle(container) {
-  const particle = document.createElement('div');
+/**
+ * Initialize champions carousel
+ */
+function initChampionsCarousel() {
+  const carousel = document.querySelector('.champions-carousel');
+  const cards = document.querySelectorAll('.champion-card');
+  const prevBtn = document.querySelector('.carousel-prev');
+  const nextBtn = document.querySelector('.carousel-next');
 
-  // Random position, size and animation duration
-  const size = Math.random() * 5 + 1;
-  const posX = Math.random() * 100;
-  const posY = Math.random() * 100;
-  const duration = Math.random() * 20 + 10;
-  const delay = Math.random() * 10;
+  let currentIndex = 0;
+  const cardWidth = cards[0].offsetWidth + 32; // 32px for gap
 
-  // Style the gold particle
-  particle.style.position = 'absolute';
-  particle.style.width = `${size}px`;
-  particle.style.height = `${size}px`;
-  particle.style.borderRadius = '50%';
-  particle.style.left = `${posX}%`;
-  particle.style.top = `${posY}%`;
-  particle.style.opacity = '0';
-  particle.style.background = `radial-gradient(circle at center,
-                               rgba(230, 192, 104, 0.9) 0%,
-                               rgba(184, 134, 11, 0.6) 70%,
-                               rgba(0, 0, 0, 0) 100%)`;
-  particle.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.7)';
-  particle.style.animation = `goldParticleFloat ${duration}s ease-in-out ${delay}s infinite`;
-
-  container.appendChild(particle);
-
-  // Create keyframe animation
-  if (!document.querySelector('#goldParticleAnimation')) {
-    const styleSheet = document.createElement('style');
-    styleSheet.id = 'goldParticleAnimation';
-    styleSheet.innerHTML = `
-      @keyframes goldParticleFloat {
-        0% {
-          transform: translateY(0) rotate(0deg);
-          opacity: 0;
-        }
-        10% {
-          opacity: 0.8;
-        }
-        50% {
-          transform: translateY(-100px) rotate(180deg);
-          opacity: 0.4;
-        }
-        90% {
-          opacity: 0.8;
-        }
-        100% {
-          transform: translateY(-200px) rotate(360deg);
-          opacity: 0;
-        }
-      }
-    `;
-    document.head.appendChild(styleSheet);
-  }
-}
-
-// Initialize gold particles when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-  createGoldParticles();
-
-  // Add luxury leather stitching effect to section headings
-  addLeatherStitchingToHeadings();
-
-  // Initialize smooth scrolling for anchor links
-  initSmoothScrolling();
-
-  // Create gold foil badges for defending champions
-  createChampionBadges();
-});
-
-// Add leather stitching detail to section headings
-function addLeatherStitchingToHeadings() {
-  const sectionHeadings = document.querySelectorAll('h2');
-
-  sectionHeadings.forEach(heading => {
-    // Create stitching container
-    const stitchContainer = document.createElement('div');
-    stitchContainer.classList.add('stitch-container');
-    stitchContainer.style.position = 'relative';
-    stitchContainer.style.width = '100%';
-    stitchContainer.style.height = '1px';
-    stitchContainer.style.marginTop = '15px';
-    stitchContainer.style.overflow = 'hidden';
-
-    // Create stitching pattern
-    const stitchPattern = document.createElement('div');
-    stitchPattern.style.width = '100%';
-    stitchPattern.style.height = '1px';
-    stitchPattern.style.background = `linear-gradient(90deg,
-      transparent, transparent 6px,
-      var(--gold-rich) 6px, var(--gold-rich) 8px,
-      transparent 8px, transparent 14px)`;
-    stitchPattern.style.backgroundSize = '14px 1px';
-    stitchPattern.style.opacity = '0.4';
-
-    stitchContainer.appendChild(stitchPattern);
-
-    // Insert after the heading
-    if (heading.nextSibling) {
-      heading.parentNode.insertBefore(stitchContainer, heading.nextSibling);
-    } else {
-      heading.parentNode.appendChild(stitchContainer);
-    }
-  });
-}
-
-// Smooth scrolling for anchor links
-function initSmoothScrolling() {
-  const anchorLinks = document.querySelectorAll('a[href^="#"]');
-
-  anchorLinks.forEach(link => {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-
-      const targetId = this.getAttribute('href');
-      if (targetId === '#') return;
-
-      const targetElement = document.querySelector(targetId);
-      if (targetElement) {
-        window.scrollTo({
-          top: targetElement.offsetTop - 100,
+  if (prevBtn && nextBtn) {
+    prevBtn.addEventListener('click', function() {
+      if (currentIndex > 0) {
+        currentIndex--;
+        carousel.scrollTo({
+          left: currentIndex * cardWidth,
           behavior: 'smooth'
         });
       }
     });
+
+    nextBtn.addEventListener('click', function() {
+      if (currentIndex < cards.length - 1) {
+        currentIndex++;
+        carousel.scrollTo({
+          left: currentIndex * cardWidth,
+          behavior: 'smooth'
+        });
+      }
+    });
+  }
+
+  // Add 3D tilt effect to champion cards
+  cards.forEach(card => {
+    card.addEventListener('mousemove', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+
+      const rotateX = (y - centerY) / 20;
+      const rotateY = (centerX - x) / 20;
+
+      this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(10px)`;
+    });
+
+    card.addEventListener('mouseleave', function() {
+      this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateZ(0)';
+    });
   });
+
+  // Create embossed gold badges for champions
+  createChampionBadges();
 }
 
-// Create embossed gold foil badges for Champions
+/**
+ * Create embossed gold badges for Champions
+ */
 function createChampionBadges() {
-  // Find all champion elements that need badges
   const champions = document.querySelectorAll('.defending-champion');
 
   champions.forEach(champion => {
@@ -394,7 +207,6 @@ function createChampionBadges() {
     badgeContainer.appendChild(embossEffect);
     badgeContainer.appendChild(badgeText);
 
-    // Set champion container to relative if not already
     if (champion.style.position !== 'relative') {
       champion.style.position = 'relative';
     }
@@ -403,7 +215,94 @@ function createChampionBadges() {
   });
 }
 
-// Add luxury scroll indicator
+/**
+ * Create gold particles for hero section
+ */
+function createGoldParticles() {
+  const hero = document.querySelector('.hero');
+  if (!hero) return;
+
+  const particlesContainer = document.createElement('div');
+  particlesContainer.classList.add('gold-particles');
+  particlesContainer.style.position = 'absolute';
+  particlesContainer.style.top = '0';
+  particlesContainer.style.left = '0';
+  particlesContainer.style.width = '100%';
+  particlesContainer.style.height = '100%';
+  particlesContainer.style.overflow = 'hidden';
+  particlesContainer.style.pointerEvents = 'none';
+  particlesContainer.style.zIndex = '1';
+
+  hero.appendChild(particlesContainer);
+
+  for (let i = 0; i < 30; i++) {
+    createParticle(particlesContainer);
+  }
+}
+
+/**
+ * Create individual gold particle
+ */
+function createParticle(container) {
+  const particle = document.createElement('div');
+
+  // Random position, size and animation duration
+  const size = Math.random() * 5 + 1;
+  const posX = Math.random() * 100;
+  const posY = Math.random() * 100;
+  const duration = Math.random() * 20 + 10;
+  const delay = Math.random() * 10;
+
+  // Style the gold particle
+  particle.style.position = 'absolute';
+  particle.style.width = `${size}px`;
+  particle.style.height = `${size}px`;
+  particle.style.borderRadius = '50%';
+  particle.style.left = `${posX}%`;
+  particle.style.top = `${posY}%`;
+  particle.style.opacity = '0';
+  particle.style.background = `radial-gradient(circle at center,
+                             rgba(230, 192, 104, 0.9) 0%,
+                             rgba(184, 134, 11, 0.6) 70%,
+                             rgba(0, 0, 0, 0) 100%)`;
+  particle.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.7)';
+  particle.style.animation = `goldParticleFloat ${duration}s ease-in-out ${delay}s infinite`;
+
+  container.appendChild(particle);
+
+  // Create keyframe animation
+  if (!document.querySelector('#goldParticleAnimation')) {
+    const styleSheet = document.createElement('style');
+    styleSheet.id = 'goldParticleAnimation';
+    styleSheet.innerHTML = `
+      @keyframes goldParticleFloat {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 0;
+        }
+        10% {
+          opacity: 0.8;
+        }
+        50% {
+          transform: translateY(-100px) rotate(180deg);
+          opacity: 0.4;
+        }
+        90% {
+          opacity: 0.8;
+        }
+        100% {
+          transform: translateY(-200px) rotate(360deg);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+  }
+}
+
+/**
+ * Create scroll to top indicator
+ */
 function createScrollIndicator() {
   const scrollIndicator = document.createElement('div');
   scrollIndicator.classList.add('scroll-indicator');
@@ -413,7 +312,7 @@ function createScrollIndicator() {
   scrollIndicator.style.width = '50px';
   scrollIndicator.style.height = '50px';
   scrollIndicator.style.borderRadius = '50%';
-  scrollIndicator.style.background = 'linear-gradient(135deg, var(--black-rich) 0%, var(--black-gloss) 100%)';
+  scrollIndicator.style.background = 'linear-gradient(135deg, var(--blue-rich) 0%, var(--blue-dark) 100%)';
   scrollIndicator.style.border = '1px solid var(--gold-rich)';
   scrollIndicator.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.5)';
   scrollIndicator.style.display = 'flex';
@@ -447,14 +346,11 @@ function createScrollIndicator() {
   });
 }
 
-// Initialize scroll indicator
-document.addEventListener('DOMContentLoaded', function() {
-  createScrollIndicator();
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Player data - could be moved to a separate JSON file in a production environment
+/**
+ * Initialize the players section with search and filtering functionality
+ */
+function initPlayersSection() {
+  // Player data
   const players = [
     { name: "AJ Meyer", Avg: 8, joined: 2018 },
     { name: "Andrew Meyer", Avg: 10, joined: 2017 },
@@ -621,17 +517,75 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Search functionality
   const searchInput = document.getElementById('playerSearch');
-  searchInput.addEventListener('input', function() {
-    currentSearchTerm = this.value;
-    const filteredPlayers = searchPlayers(players, currentSearchTerm);
-    populatePlayers(sortPlayers(filteredPlayers, currentSortOption));
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      currentSearchTerm = this.value;
+      const filteredPlayers = searchPlayers(players, currentSearchTerm);
+      populatePlayers(sortPlayers(filteredPlayers, currentSortOption));
+    });
+  }
 
   // Sort functionality
   const sortSelect = document.getElementById('playerSort');
-  sortSelect.addEventListener('change', function() {
-    currentSortOption = this.value;
-    const filteredPlayers = searchPlayers(players, currentSearchTerm);
-    populatePlayers(sortPlayers(filteredPlayers, currentSortOption));
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function() {
+      currentSortOption = this.value;
+      const filteredPlayers = searchPlayers(players, currentSearchTerm);
+      populatePlayers(sortPlayers(filteredPlayers, currentSortOption));
+    });
+  }
+}
+
+/**
+ * Add gold shimmer effect to elements with gold-shimmer class
+ */
+function addGoldShimmerEffect() {
+  const goldElements = document.querySelectorAll('.gold-shimmer');
+  goldElements.forEach(element => {
+    element.addEventListener('mousemove', function(e) {
+      const rect = this.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      this.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(230, 192, 104, 0.4) 0%, rgba(184, 134, 11, 0) 50%)`;
+    });
+
+    element.addEventListener('mouseleave', function() {
+      this.style.background = 'none';
+    });
   });
-});
+
+  // Add stitching to section headings
+  const sectionHeadings = document.querySelectorAll('h2');
+
+  sectionHeadings.forEach(heading => {
+    // Create stitching container
+    const stitchContainer = document.createElement('div');
+    stitchContainer.classList.add('stitch-container');
+    stitchContainer.style.position = 'relative';
+    stitchContainer.style.width = '100%';
+    stitchContainer.style.height = '1px';
+    stitchContainer.style.marginTop = '15px';
+    stitchContainer.style.overflow = 'hidden';
+
+    // Create stitching pattern
+    const stitchPattern = document.createElement('div');
+    stitchPattern.style.width = '100%';
+    stitchPattern.style.height = '1px';
+    stitchPattern.style.background = `linear-gradient(90deg,
+      transparent, transparent 6px,
+      var(--gold-rich) 6px, var(--gold-rich) 8px,
+      transparent 8px, transparent 14px)`;
+    stitchPattern.style.backgroundSize = '14px 1px';
+    stitchPattern.style.opacity = '0.4';
+
+    stitchContainer.appendChild(stitchPattern);
+
+    // Insert after the heading
+    if (heading.nextSibling) {
+      heading.parentNode.insertBefore(stitchContainer, heading.nextSibling);
+    } else {
+      heading.parentNode.appendChild(stitchContainer);
+    }
+  });
+}
