@@ -924,27 +924,161 @@ h2 {
 
 .scroll-indicator:hover { background: var(--gold-glow); }
 
+/* ─── HAMBURGER BUTTON (hidden on desktop) ───────── */
+.nav-toggle {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--gold);
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.nav-toggle:hover { background: var(--gold-glow); }
+
 /* ─── RESPONSIVE ─────────────────────────────────── */
-@media (max-width: 768px) {
-  #header { padding: 0 4%; }
+
+/* Tablet */
+@media (max-width: 900px) {
+  .home-grid { grid-template-columns: 1fr; }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+
+  /* Header — logo + hamburger only */
+  #header {
+    padding: 0 4%;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+  }
+
+  .nav-toggle { display: flex; }
+
+  /* Nav slides down from header when open */
+  nav {
+    display: none;
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    background: rgba(11, 17, 32, 0.98);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    z-index: 199;
+    padding: 0.75rem 0;
+  }
+
+  nav.open { display: block; }
 
   nav ul {
+    flex-direction: column;
     gap: 0;
+    padding: 0 4%;
   }
 
   nav ul li a {
-    padding: 0.4rem 0.6rem;
-    font-size: 0.72rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+    border-radius: var(--radius);
+    display: block;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
   }
 
+  nav ul li:last-child a { border-bottom: none; }
+
+  /* Hero */
+  .hero { min-height: 320px; }
+  .hero-content { padding: 2.5rem 1.5rem; }
+  .hero-content h1 { font-size: 2rem; }
+  .hero-content p { font-size: 1rem; }
+
+  /* League info */
+  .league-info { padding: 2.5rem 4%; gap: 1.25rem; }
   .info-card { flex-direction: column; }
-  .card-icon { width: 100%; height: 52px; padding-top: 0; border-right: none; border-bottom: 1px solid var(--border); }
+  .card-icon {
+    width: 100%; height: 48px; padding-top: 0;
+    border-right: none; border-bottom: 1px solid var(--border);
+    flex-direction: row; gap: 0.6rem;
+    padding-left: 1rem;
+    justify-content: flex-start;
+  }
+  .card-icon i { font-size: 1.1rem; }
+  .card-content { padding: 1.25rem; }
+  .card-content h3 { font-size: 1.1rem; }
 
-  .player-controls { flex-direction: column; align-items: stretch; }
+  .upcoming-events li { flex-wrap: wrap; gap: 0.4rem; }
+  .date { min-width: unset; }
+
+  /* Index home grid */
+  .home-grid { grid-template-columns: 1fr; padding: 2rem 4%; gap: 1.5rem; }
+
+  /* Round pills — smaller on mobile */
+  .rounds-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.5rem; }
+  .round-pill { padding: 0.6rem; }
+  .round-pill .rday { font-size: 1.3rem; }
+
+  /* Players */
+  .players-section { padding: 2.5rem 0; }
+  .players-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+  .player-controls { flex-direction: column; align-items: stretch; gap: 0.75rem; }
   .search-container { flex: none; width: 100%; }
+  .player-stats { padding: 2rem 0 3rem; }
+  .stats-cards { grid-template-columns: 1fr 1fr; gap: 1rem; }
 
+  /* Rules */
   .rules-content { padding: 2rem 4%; }
-  .rules-content section { padding: 2rem; }
+  .rules-content section { padding: 1.5rem; }
 
-  .players-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+  /* Champions */
+  .champions-gallery { padding: 3rem 0; }
+  .champions-gallery .container { width: 94%; }
+  .champions-carousel { padding: 1.5rem 0; gap: 1rem; }
+  .champion-card { flex: 0 0 260px; padding: 1.5rem; }
+
+  .hall-of-fame { padding: 3rem 0; }
+  .hall-of-fame .container { width: 94%; }
+  .hall-of-fame-grid { grid-template-columns: 1fr; gap: 1rem; margin-top: 2rem; }
+  .testimonial { padding: 0 1rem; }
+
+  /* Leaderboard */
+  .lb-wrap { padding: 2rem 4%; }
+  .lb-tabs { overflow-x: auto; gap: 0; }
+  .lb-tab { padding: 0.6rem 0.9rem; font-size: 0.76rem; white-space: nowrap; }
+
+  .lb-table th, .lb-table td { padding: 0.6rem 0.6rem; font-size: 0.78rem; }
+  /* Hide less critical columns on small screens */
+  .lb-table .hide-mobile { display: none; }
+
+  .weekly-scroll { -webkit-overflow-scrolling: touch; }
+  .weekly-table { font-size: 0.72rem; }
+  .weekly-table th, .weekly-table td { padding: 0.4rem 0.3rem; }
+
+  /* Admin editor */
+  .score-editor-grid { grid-template-columns: 1fr 1fr; }
+  .save-bar { flex-direction: column; align-items: flex-start; }
+  .save-actions { width: 100%; justify-content: flex-end; }
+  .champ-editor-grid { grid-template-columns: 1fr; }
+  .champ-row { grid-template-columns: 36px 1fr 64px 64px; }
+  .admin-toolbar { flex-direction: column; align-items: flex-start; }
+
+  /* Scroll indicator */
+  .scroll-indicator { bottom: 1.25rem; right: 1.25rem; width: 36px; height: 36px; }
+}
+
+/* Very small phones */
+@media (max-width: 380px) {
+  .hero-content h1 { font-size: 1.7rem; }
+  .players-grid { grid-template-columns: 1fr 1fr; }
+  .stats-cards { grid-template-columns: 1fr; }
+  .score-editor-grid { grid-template-columns: 1fr; }
+  .rounds-grid { grid-template-columns: repeat(3, 1fr); }
 }

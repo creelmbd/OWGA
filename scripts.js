@@ -41,6 +41,28 @@ function initializeNavigation() {
       link.classList.add('active');
     }
   });
+
+  // Hamburger menu
+  const toggle = document.getElementById('nav-toggle');
+  const nav = document.getElementById('main-nav');
+  if (toggle && nav) {
+    toggle.addEventListener('click', function() {
+      const isOpen = nav.classList.toggle('open');
+      const icon = toggle.querySelector('i');
+      icon.classList.toggle('fa-bars', !isOpen);
+      icon.classList.toggle('fa-times', isOpen);
+    });
+
+    // Close when a nav link is tapped
+    nav.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', function() {
+        nav.classList.remove('open');
+        const icon = toggle.querySelector('i');
+        icon.classList.add('fa-bars');
+        icon.classList.remove('fa-times');
+      });
+    });
+  }
 }
 
 function initChampionsCarousel() {

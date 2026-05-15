@@ -272,9 +272,9 @@
               <th class="c" style="width:52px;">Rank</th>
               <th>Player</th>
               <th class="r">Avg</th>
-              <th class="r">Strokes</th>
+              <th class="r hide-mobile">Strokes</th>
               <th class="c">Played</th>
-              <th class="c">Dropped</th>
+              <th class="c hide-mobile">Dropped</th>
             </tr>
           </thead>
           <tbody id="standings-tbody"></tbody>
@@ -485,9 +485,9 @@
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
           <td class="player-name-cell">${row.name}</td>
           <td class="r"><span class="${row.avg !== null ? 'avg-val' : 'stat-muted'}">${row.avg !== null ? row.avg.toFixed(2) : '—'}</span></td>
-          <td class="r stat-muted">${row.total || '—'}</td>
+          <td class="r stat-muted hide-mobile">${row.total || '—'}</td>
           <td class="c stat-muted">${row.played || '—'}</td>
-          <td class="c stat-muted">${row.dropped.length || '—'}</td>
+          <td class="c stat-muted hide-mobile">${row.dropped.length || '—'}</td>
         `;
         tbody.appendChild(tr);
       });
