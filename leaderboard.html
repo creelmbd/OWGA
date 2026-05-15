@@ -7,6 +7,225 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="scripts.js" defer></script>
+  <style>
+    .lb-wrap { padding: 3rem 5%; max-width: 1300px; margin: 0 auto; }
+
+    /* Tabs */
+    .lb-tabs {
+      display: flex; gap: 0; margin-bottom: 2.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .lb-tab {
+      padding: 0.65rem 1.4rem; font-family: var(--sans); font-size: 0.82rem;
+      font-weight: 500; letter-spacing: 0.06em; color: var(--muted);
+      cursor: pointer; border: none; background: none;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .lb-tab.active { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+    .lb-tab:hover:not(.active) { color: var(--cream); }
+    .lb-panel { display: none; }
+    .lb-panel.active { display: block; }
+
+    /* Standings table */
+    .lb-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.88rem; }
+    .lb-table th {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gold); padding: 0.7rem 1rem;
+      text-align: left; border-bottom: 1px solid var(--border-strong);
+      background: rgba(201,168,76,0.06); white-space: nowrap;
+    }
+    .lb-table th.c { text-align: center; }
+    .lb-table th.r { text-align: right; }
+    .lb-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--cream); white-space: nowrap;
+    }
+    .lb-table td.c { text-align: center; }
+    .lb-table td.r { text-align: right; }
+    .lb-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .rank-num { font-family: var(--serif-display); font-size: 1.05rem; color: var(--gold-pale); font-weight: 700; }
+    .rank-num.top { color: var(--gold-bright); }
+    .player-name-cell { font-weight: 500; color: var(--white); }
+    .avg-val { font-family: var(--serif-display); font-size: 1.05rem; color: var(--gold-bright); }
+    .stat-muted { color: var(--muted); font-size: 0.82rem; }
+
+    /* Weekly grid */
+    .weekly-scroll { overflow-x: auto; }
+    .weekly-table {
+      width: 100%; border-collapse: collapse; font-family: var(--sans);
+      font-size: 0.78rem; min-width: 800px;
+    }
+    .weekly-table th {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--gold); padding: 0.6rem 0.4rem;
+      text-align: center; border-bottom: 1px solid var(--border-strong);
+      background: rgba(201,168,76,0.06); white-space: nowrap;
+    }
+    .weekly-table th.left { text-align: left; padding-left: 1rem; }
+    .weekly-table td {
+      padding: 0.45rem 0.35rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      text-align: center; color: var(--cream);
+    }
+    .weekly-table td.left { text-align: left; padding-left: 1rem; font-weight: 500; color: var(--white); }
+    .weekly-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .sc { display: inline-block; min-width: 28px; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.78rem; }
+    .sc-counted { background: rgba(201,168,76,0.1); color: var(--gold-pale); }
+    .sc-dropped { background: rgba(230,130,20,0.2); color: #f0a830; font-weight: 600; }
+    .sc-best   { background: rgba(60,160,80,0.18); color: #72d48a; font-weight: 600; }
+    .sc-zero   { color: var(--muted); }
+    .sc-empty  { color: rgba(255,255,255,0.1); }
+
+    /* Championship panel */
+    .champ-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem; margin-top: 1.5rem;
+    }
+    .champ-card {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      display: flex; align-items: center; gap: 0.9rem;
+      transition: border-color 0.2s;
+    }
+    .champ-card:hover { border-color: var(--border-strong); }
+    .champ-card.p1 { border-color: rgba(201,168,76,0.5); }
+    .champ-card.p2 { border-color: rgba(160,160,160,0.35); }
+    .champ-card.p3 { border-color: rgba(160,100,60,0.4); }
+    .place-circle {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--serif-display); font-size: 0.95rem; font-weight: 700;
+    }
+    .place-circle.p1 { background: rgba(201,168,76,0.12); color: var(--gold-bright); border: 1px solid var(--gold-muted); }
+    .place-circle.p2 { background: rgba(180,180,180,0.08); color: #b0b0b0; border: 1px solid #555; }
+    .place-circle.p3 { background: rgba(160,100,60,0.1); color: #c07848; border: 1px solid #6a4020; }
+    .place-circle.pn { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+    .champ-info .champ-player { font-weight: 500; color: var(--white); font-size: 0.9rem; }
+    .champ-info .champ-score { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+    .champ-info .champ-score span { color: var(--gold); font-weight: 600; }
+
+    /* Admin panel */
+    .admin-gate {
+      max-width: 380px; margin: 3rem auto; text-align: center;
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2.5rem 2rem;
+    }
+    .admin-gate h3 { font-family: var(--serif-body); font-size: 1.2rem; color: var(--white); margin-bottom: 0.5rem; }
+    .admin-gate p { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+    .admin-gate input {
+      width: 100%; background: var(--navy); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.65rem 1rem;
+      color: var(--cream); font-family: var(--sans); font-size: 0.9rem;
+      margin-bottom: 1rem; outline: none;
+    }
+    .admin-gate input:focus { border-color: var(--gold-muted); }
+    .btn-gold {
+      background: transparent; border: 1px solid var(--gold-muted);
+      color: var(--gold); padding: 0.65rem 1.5rem; border-radius: var(--radius);
+      font-family: var(--sans); font-size: 0.82rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-gold:hover { background: var(--gold-glow); }
+    .btn-muted {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: 0.5rem 1rem; border-radius: var(--radius);
+      font-family: var(--sans); font-size: 0.78rem; cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-muted:hover { border-color: var(--border-strong); color: var(--cream); }
+    .error-msg { color: #e07070; font-size: 0.8rem; margin-top: 0.5rem; }
+
+    /* Admin editor */
+    .admin-editor { display: none; }
+    .admin-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+    }
+    .admin-toolbar h3 { font-family: var(--serif-body); font-size: 1.1rem; color: var(--white); }
+    .week-selector { display: flex; align-items: center; gap: 0.75rem; }
+    .week-selector label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
+    .week-selector select {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.5rem 0.75rem;
+      color: var(--cream); font-family: var(--sans); font-size: 0.85rem; outline: none;
+    }
+    .week-selector select:focus { border-color: var(--gold-muted); }
+
+    .score-editor-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem; margin-bottom: 1.5rem;
+    }
+    .score-row {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.75rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    }
+    .score-row label { font-size: 0.85rem; color: var(--cream); font-weight: 500; flex: 1; }
+    .score-row input {
+      width: 70px; background: var(--navy); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.4rem 0.5rem; text-align: center;
+      color: var(--gold-pale); font-family: var(--sans); font-size: 0.9rem;
+      font-weight: 600; outline: none;
+    }
+    .score-row input:focus { border-color: var(--gold-muted); }
+    .score-row input.has-score { border-color: rgba(201,168,76,0.3); }
+
+    .save-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 1.25rem; background: var(--navy-card);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;
+    }
+    .save-bar p { font-size: 0.82rem; color: var(--muted); }
+    .save-bar p strong { color: var(--gold); }
+    .save-actions { display: flex; gap: 0.75rem; }
+
+    .saved-flash {
+      font-size: 0.78rem; color: #72d48a; font-weight: 600;
+      letter-spacing: 0.06em; opacity: 0; transition: opacity 0.3s;
+    }
+    .saved-flash.show { opacity: 1; }
+
+    .champ-editor { margin-top: 2rem; }
+    .champ-editor h4 {
+      font-family: var(--sans); font-size: 0.72rem; font-weight: 600;
+      letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold);
+      margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
+    }
+    .champ-editor-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.75rem;
+    }
+    .champ-row {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.75rem 1rem;
+      display: grid; grid-template-columns: 48px 1fr 80px 80px; align-items: center; gap: 0.5rem;
+    }
+    .champ-row .place-lbl { font-family: var(--serif-display); color: var(--gold-pale); font-size: 0.95rem; text-align: center; }
+    .champ-row input {
+      background: var(--navy); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.4rem 0.5rem;
+      color: var(--cream); font-family: var(--sans); font-size: 0.82rem; outline: none;
+    }
+    .champ-row input:focus { border-color: var(--gold-muted); }
+    .champ-row input.score-in { text-align: center; color: var(--gold-pale); font-weight: 600; }
+
+    .admin-note {
+      font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.5;
+    }
+    .admin-note i { color: var(--gold-muted); margin-right: 0.3rem; }
+
+    .legend {
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+      margin-bottom: 1.25rem; font-size: 0.76rem; color: var(--muted);
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    .section-note { font-size: 0.8rem; color: var(--muted); margin-top: 1.5rem; }
+    .section-note i { color: var(--gold-muted); margin-right: 0.3rem; }
+  </style>
 </head>
 <body>
   <div id="header"></div>
@@ -14,36 +233,526 @@
   <main>
     <section class="hero">
       <div class="hero-content">
-        <span class="hero-eyebrow">2025 Season</span>
+        <span class="hero-eyebrow">2026 Season</span>
         <h1>Leaderboard</h1>
-        <p>Live standings updated each week after Friday rounds</p>
+        <p>Season standings updated after each Friday round</p>
       </div>
     </section>
 
-    <section class="leaderboard-section">
-      <span class="section-label">Season Standings</span>
-      <h2>Current Rankings</h2>
-      <div class="gold-rule"></div>
+    <div class="lb-wrap">
 
-      <div class="standings" style="margin-top:0">
-        <div class="standings-header">
-          <span>Rank</span>
-          <span>Player</span>
-          <span>Stroke Avg</span>
+      <div class="lb-tabs">
+        <button class="lb-tab active" onclick="showTab('standings')">Standings</button>
+        <button class="lb-tab" onclick="showTab('weekly')">Weekly Scores</button>
+        <button class="lb-tab" onclick="showTab('championship')">Championship</button>
+        <button class="lb-tab" onclick="showTab('admin')" style="margin-left:auto;">
+          <i class="fas fa-lock" style="font-size:0.7rem;margin-right:0.4rem;"></i>Admin
+        </button>
+      </div>
+
+      <!-- STANDINGS -->
+      <div id="panel-standings" class="lb-panel active">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:0.75rem;">
+          <div>
+            <span class="section-label">Season Standings</span>
+            <h2>Current Rankings</h2>
+          </div>
+          <span id="rounds-played-label" style="font-size:0.78rem;color:var(--muted);"></span>
         </div>
-        <div class="standings-row"><span>1</span><span>Brian Creelman</span><span>35.5</span></div>
-        <div class="standings-row"><span>2</span><span>Daniel Tracy</span><span>37.0</span></div>
-        <div class="standings-row"><span>3</span><span>Randy Bulach</span><span>37.5</span></div>
-        <div class="standings-row"><span>4</span><span>Zak Curry</span><span>38.0</span></div>
-        <div class="standings-row"><span>5</span><span>Dave Tracy</span><span>38.5</span></div>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted round</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped (over minimum)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+        </div>
+
+        <table class="lb-table" id="standings-tbody-wrap">
+          <thead>
+            <tr>
+              <th class="c" style="width:52px;">Rank</th>
+              <th>Player</th>
+              <th class="r">Avg</th>
+              <th class="r">Strokes</th>
+              <th class="c">Played</th>
+              <th class="c">Dropped</th>
+            </tr>
+          </thead>
+          <tbody id="standings-tbody"></tbody>
+        </table>
+
+        <p class="section-note">
+          <i class="fas fa-info-circle"></i>
+          Standings based on best 6 rounds. Scores of 0 indicate the player did not attend that week.
+        </p>
       </div>
 
-      <p style="margin-top:2rem;font-size:0.85rem;color:var(--muted);text-align:center">
-        Standings reflect best 6 rounds. Full results updated after each Friday match.
-      </p>
-    </section>
+      <!-- WEEKLY SCORES -->
+      <div id="panel-weekly" class="lb-panel">
+        <div style="margin-bottom:1.5rem;">
+          <span class="section-label">Round by Round</span>
+          <h2>Weekly Scores</h2>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+        </div>
+
+        <div class="weekly-scroll">
+          <table class="weekly-table">
+            <thead id="weekly-thead"></thead>
+            <tbody id="weekly-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CHAMPIONSHIP -->
+      <div id="panel-championship" class="lb-panel">
+        <div style="margin-bottom:1.5rem;">
+          <span class="section-label">Championship Day</span>
+          <h2>Final Results</h2>
+        </div>
+        <div id="champ-content"></div>
+      </div>
+
+      <!-- ADMIN -->
+      <div id="panel-admin" class="lb-panel">
+
+        <!-- Login gate -->
+        <div class="admin-gate" id="admin-gate">
+          <h3>Admin Access</h3>
+          <p>Enter the password to update scores.</p>
+          <input type="password" id="admin-pw" placeholder="Password" onkeydown="if(event.key==='Enter')adminLogin()">
+          <br>
+          <button class="btn-gold" onclick="adminLogin()">Sign In</button>
+          <p class="error-msg" id="pw-error"></p>
+        </div>
+
+        <!-- Editor (shown after login) -->
+        <div class="admin-editor" id="admin-editor">
+
+          <div class="admin-toolbar">
+            <h3>Score Editor</h3>
+            <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+              <div class="week-selector">
+                <label>Week</label>
+                <select id="week-select" onchange="loadWeekScores()"></select>
+              </div>
+              <button class="btn-muted" onclick="adminLogout()">
+                <i class="fas fa-sign-out-alt" style="margin-right:0.3rem;font-size:0.75rem;"></i>Log out
+              </button>
+            </div>
+          </div>
+
+          <div class="save-bar">
+            <p>Editing <strong id="editing-week-label">Week 1</strong>. Enter scores for players who attended. Leave blank or 0 for absent.</p>
+            <div class="save-actions">
+              <span class="saved-flash" id="saved-flash">✓ Saved</span>
+              <button class="btn-muted" onclick="clearWeek()">Clear week</button>
+              <button class="btn-gold" onclick="saveScores()">Save &amp; Publish</button>
+            </div>
+          </div>
+
+          <div class="score-editor-grid" id="score-editor-grid"></div>
+
+          <p class="admin-note">
+            <i class="fas fa-info-circle"></i>
+            Scores are saved locally in this browser. Best 6 rounds are counted automatically — dropped rounds are highlighted in orange on the public view. Enter 0 or leave blank for absent players.
+          </p>
+
+          <!-- Championship editor -->
+          <div class="champ-editor">
+            <h4>Championship Day Results</h4>
+            <div class="champ-editor-grid" id="champ-editor-grid"></div>
+            <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center;">
+              <button class="btn-gold" onclick="saveChampionship()">Save Championship</button>
+              <span class="saved-flash" id="champ-saved-flash">✓ Saved</span>
+            </div>
+            <p class="admin-note" style="margin-top:0.75rem;">
+              <i class="fas fa-info-circle"></i>
+              Enter player name, front 9, and back 9 for each finishing position. Total is calculated automatically.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
   </main>
 
   <div id="footer"></div>
+
+  <script>
+    // ── CONFIG ─────────────────────────────────────────────────────
+    const ADMIN_PASSWORD = 'owga2026';
+    const TOTAL_WEEKS = 14;
+    const BEST_N = 6;
+    const SEASON_YEAR = '2026';
+
+    const PLAYERS = [
+      'AJ Meyer','Andrew Meyer','Brad Minges','Brian Creelman','Bruce Tedesco',
+      'Christian Tracy','Cody Vatter','Dan Heitman','Dan Hirsch','Daniel Tracy',
+      'Dave Eads','Dave Tracy','Hobie Bolton','James Nelson','Joe McConnell',
+      'Joey Jacobs','Josh McConnell','Mike Tracy','Randy Bulach','Steve Griffin',
+      'Tony Bulach','Zak Curry'
+    ];
+
+    const WEEK_DATES = [
+      'May 22','May 29','Jun 5','Jun 12','Jun 19','Jun 26',
+      'Jul 3','Jul 10','Jul 17','Jul 24','Jul 31',
+      'Aug 7','Aug 14','Aug 21'
+    ];
+
+    // ── DATA ───────────────────────────────────────────────────────
+    function loadData() {
+      try { return JSON.parse(localStorage.getItem('owga_scores_' + SEASON_YEAR) || '{}'); }
+      catch(e) { return {}; }
+    }
+
+    function saveData(data) {
+      localStorage.setItem('owga_scores_' + SEASON_YEAR, JSON.stringify(data));
+    }
+
+    function loadChampData() {
+      try { return JSON.parse(localStorage.getItem('owga_champ_' + SEASON_YEAR) || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function saveChampData(data) {
+      localStorage.setItem('owga_champ_' + SEASON_YEAR, JSON.stringify(data));
+    }
+
+    // ── SCORING LOGIC ──────────────────────────────────────────────
+    // Returns { counted: [], dropped: [], avg, total, played, bestScore }
+    function calcPlayer(scores) {
+      // scores = array of up to TOTAL_WEEKS numbers (0 = absent)
+      const attended = scores
+        .map((s, i) => ({ score: s, week: i }))
+        .filter(x => x.score > 0);
+
+      if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null };
+
+      const sorted = [...attended].sort((a, b) => a.score - b.score);
+      const countedWeeks = new Set(sorted.slice(0, BEST_N).map(x => x.week));
+      const best = sorted[0];
+
+      const counted = attended.filter(x => countedWeeks.has(x.week));
+      const dropped = attended.filter(x => !countedWeeks.has(x.week));
+
+      const total = counted.reduce((s, x) => s + x.score, 0);
+      const avg = counted.length > 0 ? (total / counted.length) : null;
+
+      return { counted, dropped, avg, total, played: attended.length, bestScore: best.score, bestWeek: best.week, countedWeeks };
+    }
+
+    // ── RENDER STANDINGS ───────────────────────────────────────────
+    function renderStandings() {
+      const data = loadData();
+      const rows = PLAYERS.map(name => {
+        const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
+        const calc = calcPlayer(scores);
+        return { name, ...calc };
+      });
+
+      // Sort: players who've played first (by avg asc), then unplayed alphabetically
+      rows.sort((a, b) => {
+        if (a.avg !== null && b.avg !== null) return a.avg - b.avg;
+        if (a.avg !== null) return -1;
+        if (b.avg !== null) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      const tbody = document.getElementById('standings-tbody');
+      tbody.innerHTML = '';
+
+      let rank = 1;
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        const isTop = rank <= 3 && row.avg !== null;
+
+        // Handle tied ranks
+        if (i > 0 && row.avg !== null && rows[i-1].avg !== null && row.avg === rows[i-1].avg) {
+          // same rank as previous
+        } else if (row.avg !== null) {
+          rank = i + 1;
+        }
+
+        const displayRank = row.avg !== null ? rank : '—';
+        const rankClass = isTop ? 'rank-num top' : 'rank-num';
+
+        tr.innerHTML = `
+          <td class="c"><span class="${rankClass}">${displayRank}</span></td>
+          <td class="player-name-cell">${row.name}</td>
+          <td class="r"><span class="${row.avg !== null ? 'avg-val' : 'stat-muted'}">${row.avg !== null ? row.avg.toFixed(2) : '—'}</span></td>
+          <td class="r stat-muted">${row.total || '—'}</td>
+          <td class="c stat-muted">${row.played || '—'}</td>
+          <td class="c stat-muted">${row.dropped.length || '—'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Update rounds played label
+      const weeksWithData = Array.from({ length: TOTAL_WEEKS }, (_, i) =>
+        PLAYERS.some(p => (data[p]?.[i] ?? 0) > 0)
+      ).filter(Boolean).length;
+      document.getElementById('rounds-played-label').textContent =
+        weeksWithData > 0 ? `${weeksWithData} of ${TOTAL_WEEKS} rounds played` : 'Season not yet started';
+    }
+
+    // ── RENDER WEEKLY TABLE ────────────────────────────────────────
+    function renderWeekly() {
+      const data = loadData();
+
+      // Find last week with any data
+      let lastWeek = -1;
+      for (let w = TOTAL_WEEKS - 1; w >= 0; w--) {
+        if (PLAYERS.some(p => (data[p]?.[w] ?? 0) > 0)) { lastWeek = w; break; }
+      }
+
+      // Build header
+      const thead = document.getElementById('weekly-thead');
+      let headerHTML = '<tr><th class="left">Player</th>';
+      for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
+        headerHTML += `<th>Wk ${w+1}<br><span style="font-weight:400;opacity:0.6;font-size:0.58rem;">${WEEK_DATES[w]}</span></th>`;
+      }
+      headerHTML += '<th>Avg</th><th>Played</th></tr>';
+      thead.innerHTML = headerHTML;
+
+      // Sort players same as standings
+      const rows = PLAYERS.map(name => {
+        const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
+        const calc = calcPlayer(scores);
+        return { name, scores, ...calc };
+      }).sort((a, b) => {
+        if (a.avg !== null && b.avg !== null) return a.avg - b.avg;
+        if (a.avg !== null) return -1;
+        if (b.avg !== null) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+      const tbody = document.getElementById('weekly-tbody');
+      tbody.innerHTML = '';
+
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        let cells = `<td class="left">${row.name}</td>`;
+
+        for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
+          const score = row.scores[w];
+          let cls = 'sc sc-empty';
+          let display = '—';
+
+          if (score > 0) {
+            const isBest = row.bestWeek === w;
+            const isDropped = row.dropped.some(d => d.week === w);
+            if (isBest) { cls = 'sc sc-best'; }
+            else if (isDropped) { cls = 'sc sc-dropped'; }
+            else { cls = 'sc sc-counted'; }
+            display = score;
+          } else if (score === 0 && w <= lastWeek) {
+            cls = 'sc sc-zero';
+            display = '—';
+          }
+
+          cells += `<td><span class="${cls}">${display}</span></td>`;
+        }
+
+        cells += `<td><strong style="color:var(--gold-bright)">${row.avg !== null ? row.avg.toFixed(2) : '—'}</strong></td>`;
+        cells += `<td style="color:var(--muted)">${row.played || '—'}</td>`;
+        tr.innerHTML = cells;
+        tbody.appendChild(tr);
+      });
+
+      if (lastWeek < 0) {
+        tbody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:3rem;color:var(--muted);font-style:italic;">No rounds recorded yet. Check back after the first Friday match.</td></tr>`;
+        thead.innerHTML = '<tr><th class="left">Player</th><th>Avg</th></tr>';
+      }
+    }
+
+    // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
+    function renderChampionship() {
+      const champ = loadChampData();
+      const container = document.getElementById('champ-content');
+
+      if (champ.length === 0 || champ.every(c => !c.name)) {
+        container.innerHTML = `
+          <div style="text-align:center;padding:4rem 0;color:var(--muted);">
+            <i class="fas fa-trophy" style="font-size:2.5rem;color:var(--border-strong);display:block;margin-bottom:1rem;"></i>
+            <p style="font-size:1rem;">Championship results will appear here after August 22.</p>
+            <p style="font-size:0.82rem;margin-top:0.5rem;">Results are entered via the Admin panel.</p>
+          </div>`;
+        return;
+      }
+
+      const pClass = (i) => i === 0 ? 'p1' : i === 1 ? 'p2' : i === 2 ? 'p3' : 'pn';
+      const grid = document.createElement('div');
+      grid.className = 'champ-grid';
+
+      champ.forEach((entry, i) => {
+        if (!entry.name) return;
+        const total = (parseInt(entry.front) || 0) + (parseInt(entry.back) || 0);
+        const card = document.createElement('div');
+        card.className = `champ-card ${pClass(i)}`;
+        card.innerHTML = `
+          <div class="place-circle ${pClass(i)}">${i + 1}</div>
+          <div class="champ-info">
+            <div class="champ-player">${entry.name}</div>
+            <div class="champ-score">
+              Front: <span>${entry.front || '—'}</span> &nbsp;
+              Back: <span>${entry.back || '—'}</span> &nbsp;
+              Total: <span>${total || '—'}</span>
+            </div>
+          </div>`;
+        grid.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    // ── TABS ───────────────────────────────────────────────────────
+    function showTab(name) {
+      document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      event.currentTarget.classList.add('active');
+      if (name === 'weekly') renderWeekly();
+      if (name === 'championship') renderChampionship();
+    }
+
+    // ── ADMIN ──────────────────────────────────────────────────────
+    function adminLogin() {
+      const pw = document.getElementById('admin-pw').value;
+      if (pw === ADMIN_PASSWORD) {
+        document.getElementById('admin-gate').style.display = 'none';
+        document.getElementById('admin-editor').style.display = 'block';
+        buildWeekSelector();
+        buildScoreEditor();
+        buildChampEditor();
+      } else {
+        document.getElementById('pw-error').textContent = 'Incorrect password.';
+      }
+    }
+
+    function adminLogout() {
+      document.getElementById('admin-gate').style.display = 'block';
+      document.getElementById('admin-editor').style.display = 'none';
+      document.getElementById('admin-pw').value = '';
+      document.getElementById('pw-error').textContent = '';
+    }
+
+    function buildWeekSelector() {
+      const sel = document.getElementById('week-select');
+      sel.innerHTML = '';
+      for (let w = 0; w < TOTAL_WEEKS; w++) {
+        const opt = document.createElement('option');
+        opt.value = w;
+        opt.textContent = `Week ${w + 1} — ${WEEK_DATES[w]}`;
+        sel.appendChild(opt);
+      }
+    }
+
+    function loadWeekScores() {
+      const week = parseInt(document.getElementById('week-select').value);
+      const data = loadData();
+      document.getElementById('editing-week-label').textContent = `Week ${week + 1} — ${WEEK_DATES[week]}`;
+
+      const grid = document.getElementById('score-editor-grid');
+      grid.innerHTML = '';
+
+      PLAYERS.forEach(name => {
+        const score = data[name]?.[week] ?? '';
+        const row = document.createElement('div');
+        row.className = 'score-row';
+        row.innerHTML = `
+          <label>${name}</label>
+          <input type="number" min="0" max="60" placeholder="—"
+            value="${score || ''}"
+            class="${score ? 'has-score' : ''}"
+            data-player="${name}"
+            oninput="this.classList.toggle('has-score', this.value !== '')">
+        `;
+        grid.appendChild(row);
+      });
+    }
+
+    function buildScoreEditor() {
+      loadWeekScores();
+    }
+
+    function saveScores() {
+      const week = parseInt(document.getElementById('week-select').value);
+      const data = loadData();
+      const inputs = document.querySelectorAll('#score-editor-grid input');
+
+      inputs.forEach(input => {
+        const name = input.dataset.player;
+        if (!data[name]) data[name] = {};
+        const val = parseInt(input.value);
+        data[name][week] = isNaN(val) ? 0 : val;
+      });
+
+      saveData(data);
+      renderStandings();
+
+      const flash = document.getElementById('saved-flash');
+      flash.classList.add('show');
+      setTimeout(() => flash.classList.remove('show'), 2000);
+    }
+
+    function clearWeek() {
+      if (!confirm('Clear all scores for this week?')) return;
+      const week = parseInt(document.getElementById('week-select').value);
+      const data = loadData();
+      PLAYERS.forEach(name => { if (data[name]) data[name][week] = 0; });
+      saveData(data);
+      loadWeekScores();
+      renderStandings();
+    }
+
+    // ── CHAMPIONSHIP EDITOR ────────────────────────────────────────
+    function buildChampEditor() {
+      const champ = loadChampData();
+      const grid = document.getElementById('champ-editor-grid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < 15; i++) {
+        const entry = champ[i] || {};
+        const row = document.createElement('div');
+        row.className = 'champ-row';
+        row.innerHTML = `
+          <span class="place-lbl">${i + 1}</span>
+          <input type="text" placeholder="Player name" value="${entry.name || ''}" data-ci="${i}" data-field="name">
+          <input type="number" min="0" max="60" placeholder="Front 9" value="${entry.front || ''}" class="score-in" data-ci="${i}" data-field="front">
+          <input type="number" min="0" max="60" placeholder="Back 9" value="${entry.back || ''}" class="score-in" data-ci="${i}" data-field="back">
+        `;
+        grid.appendChild(row);
+      }
+    }
+
+    function saveChampionship() {
+      const inputs = document.querySelectorAll('#champ-editor-grid input');
+      const entries = {};
+      inputs.forEach(input => {
+        const i = input.dataset.ci;
+        if (!entries[i]) entries[i] = {};
+        entries[i][input.dataset.field] = input.value;
+      });
+
+      const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
+      saveChampData(arr);
+      renderChampionship();
+
+      const flash = document.getElementById('champ-saved-flash');
+      flash.classList.add('show');
+      setTimeout(() => flash.classList.remove('show'), 2000);
+    }
+
+    // ── INIT ───────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      renderStandings();
+    });
+  </script>
 </body>
 </html>
