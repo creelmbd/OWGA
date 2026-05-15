@@ -1,121 +1,475 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OWGA Golf League - Home</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="scripts.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OWGA Golf League</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="scripts.js" defer></script>
+  <style>
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 2rem;
+      padding: 3rem 5%;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .season-badge {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--gold-glow);
+      border: 1px solid var(--border-strong);
+      padding: 0.25rem 0.75rem;
+      border-radius: 2px;
+    }
+
+    .month-block { margin-bottom: 2rem; }
+    .month-label {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .month-label::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .rounds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.6rem;
+    }
+    .round-pill {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      transition: border-color 0.2s;
+    }
+    .round-pill:hover { border-color: var(--border-strong); }
+    .round-pill.championship {
+      border-color: var(--gold-muted);
+      background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-card) 100%);
+    }
+    .round-pill .rday {
+      font-family: var(--serif-display);
+      font-size: 1.6rem;
+      color: var(--white);
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+    .round-pill.championship .rday { color: var(--gold-bright); }
+    .round-pill .rweekday {
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .round-pill .rtype {
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.25rem;
+    }
+    .round-pill.championship .rtype { color: var(--gold); }
+
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .champ-banner {
+      background: linear-gradient(135deg, var(--navy-light) 0%, var(--navy-card) 100%);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .champ-trophy {
+      width: 48px;
+      height: 48px;
+      background: var(--gold-glow);
+      border: 1px solid var(--border-strong);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1.2rem;
+      color: var(--gold-bright);
+    }
+    .champ-tag {
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold-muted);
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+    .champ-name {
+      font-family: var(--serif-body);
+      font-size: 1.1rem;
+      color: var(--white);
+    }
+    .champ-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+
+    .course-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .course-visual {
+      height: 150px;
+      background: #071208;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .course-visual svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .course-overlay {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+    }
+    .course-overlay h4 {
+      font-family: var(--serif-display);
+      font-size: 1.1rem;
+      color: var(--gold-bright);
+      letter-spacing: 0.06em;
+      margin-bottom: 0.2rem;
+    }
+    .course-overlay span {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+    }
+    .course-body { padding: 1.25rem; }
+    .course-stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
+    }
+    .cs {
+      background: var(--navy-light);
+      border-radius: var(--radius);
+      padding: 0.6rem 0.75rem;
+    }
+    .cs-val {
+      font-family: var(--serif-display);
+      font-size: 1.05rem;
+      color: var(--gold-bright);
+      display: block;
+      line-height: 1.2;
+    }
+    .cs-lbl {
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-top: 0.1rem;
+    }
+    .tee-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .tee-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 2px;
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 600;
+    }
+    .tee-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .tee-badge.tb-black { background: rgba(255,255,255,0.05); color: #ccc; }
+    .tee-badge.tb-black .tee-dot { background: #555; border: 1px solid rgba(255,255,255,0.2); }
+    .tee-badge.tb-blue { background: rgba(56,130,220,0.1); color: #89b8f5; }
+    .tee-badge.tb-blue .tee-dot { background: #3882dc; }
+    .tee-badge.tb-white { background: rgba(255,255,255,0.05); color: #ddd; }
+    .tee-badge.tb-white .tee-dot { background: #e8e8e8; }
+    .tee-badge.tb-green { background: rgba(80,160,80,0.1); color: #7dc47d; }
+    .tee-badge.tb-green .tee-dot { background: #50a050; }
+
+    .quick-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .quick-card-title {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .fact-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.55rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.86rem;
+    }
+    .fact-row:last-child { border-bottom: none; }
+    .fact-row i { color: var(--gold-muted); width: 16px; text-align: center; flex-shrink: 0; font-size: 0.85rem; }
+    .fact-lbl { color: var(--muted); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .fact-val { color: var(--cream); margin-left: auto; font-size: 0.84rem; text-align: right; }
+
+    @media (max-width: 960px) {
+      .home-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-    <div id="header"></div>
+  <div id="header"></div>
 
-    <main>
-        <section class="hero player-hero">
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <span class="hero-eyebrow">Est. 2013 &bull; Oxford, Ohio</span>
+        <h1>Okeana Whackers<br>Golf Association</h1>
+        <p>Friday evening golf league at Indian Ridge Golf Club</p>
+      </div>
+    </section>
+
+    <div class="home-grid">
+
+      <!-- Season calendar -->
+      <div>
+        <div class="section-header">
+          <div>
+            <span class="section-label">Schedule</span>
+            <h2>2025 Season</h2>
           </div>
-        </section>
-    </div>
-        <section class="league-info">
-            <h2>League Information</h2>
+          <span class="season-badge">14 Rounds</span>
+        </div>
 
-            <div class="info-card">
-                <div class="card-icon">
-                    <i class="fas fa-calendar-alt"></i>
-                </div>
-                <div class="card-content">
-                    <h3>Season Schedule</h3>
-                    <p>Our season runs from May through August with weekly matches every Friday evening..</p>
-                    <div class="upcoming-events">
-                        <h4>Upcoming Events</h4>
-                        <ul>
-                            <li><span class="date">May 30, 2025</span> - Weekly Match</li>
-                            <li><span class="date">June 6, 2025</span> - Weekly Match</li>
-                            <li><span class="date">June 13, 2025</span> - Weekly Match</li>
-                            <li><span class="date">June 20, 2025</span> - Weekly Match</li>
-                            <li><span class="date">June 27, 2025</span> - Weekly Match</li>
-                            <li><span class="date">July 4, 2025</span> - Weekly Match</li>
-                            <li><span class="date">July 11, 2025</span> - Weekly Match</li>
-                            <li><span class="date">July 18, 2025</span> - Weekly Match</li>
-                            <li><span class="date">July 25, 2025</span> - Weekly Match</li>
-                            <li><span class="date">August 1, 2025</span> - Weekly Match</li>
-                            <li><span class="date">August 8, 2025</span> - Weekly Match</li>
-                            <li><span class="date">August 15, 2025</span> - Weekly Match</li>
-                            <li><span class="date">August 22, 2025</span> - Weekly Match</li>
-                            <li><span class="date">August 23, 2025</span> - Championship Day</li>
-                        </ul>
-                    </div>
+        <div class="month-block">
+          <div class="month-label">May</div>
+          <div class="rounds-grid">
+            <div class="round-pill"><span class="rday">22</span><span class="rweekday">Friday</span><span class="rtype">Round 1</span></div>
+            <div class="round-pill"><span class="rday">29</span><span class="rweekday">Friday</span><span class="rtype">Round 2</span></div>
+          </div>
+        </div>
 
-                </div>
+        <div class="month-block">
+          <div class="month-label">June</div>
+          <div class="rounds-grid">
+            <div class="round-pill"><span class="rday">5</span><span class="rweekday">Friday</span><span class="rtype">Round 3</span></div>
+            <div class="round-pill"><span class="rday">12</span><span class="rweekday">Friday</span><span class="rtype">Round 4</span></div>
+            <div class="round-pill"><span class="rday">19</span><span class="rweekday">Friday</span><span class="rtype">Round 5</span></div>
+            <div class="round-pill"><span class="rday">26</span><span class="rweekday">Friday</span><span class="rtype">Round 6</span></div>
+          </div>
+        </div>
+
+        <div class="month-block">
+          <div class="month-label">July</div>
+          <div class="rounds-grid">
+            <div class="round-pill"><span class="rday">3</span><span class="rweekday">Friday</span><span class="rtype">Round 7</span></div>
+            <div class="round-pill"><span class="rday">10</span><span class="rweekday">Friday</span><span class="rtype">Round 8</span></div>
+            <div class="round-pill"><span class="rday">17</span><span class="rweekday">Friday</span><span class="rtype">Round 9</span></div>
+            <div class="round-pill"><span class="rday">24</span><span class="rweekday">Friday</span><span class="rtype">Round 10</span></div>
+            <div class="round-pill"><span class="rday">31</span><span class="rweekday">Friday</span><span class="rtype">Round 11</span></div>
+          </div>
+        </div>
+
+        <div class="month-block">
+          <div class="month-label">August</div>
+          <div class="rounds-grid">
+            <div class="round-pill"><span class="rday">7</span><span class="rweekday">Friday</span><span class="rtype">Round 12</span></div>
+            <div class="round-pill"><span class="rday">14</span><span class="rweekday">Friday</span><span class="rtype">Round 13</span></div>
+            <div class="round-pill"><span class="rday">21</span><span class="rweekday">Friday</span><span class="rtype">Round 14</span></div>
+            <div class="round-pill championship"><span class="rday">22</span><span class="rweekday">Saturday</span><span class="rtype">Championship</span></div>
+          </div>
+        </div>
+
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.25rem;">
+          <i class="fas fa-info-circle" style="color:var(--gold-muted);margin-right:0.4rem;"></i>
+          First tee time is at 5:00 PM. RSVP by Wednesday. Let Brad and Creel know if you'll be close to that time.
+        </p>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <div class="champ-banner">
+          <div class="champ-trophy"><i class="fas fa-trophy"></i></div>
+          <div style="flex:1;">
+            <span class="champ-tag">2025 Champion</span>
+            <div class="champ-name">Brad Minges</div>
+            <div class="champ-sub">Indian Ridge</div>
+          </div>
+          <a href="champions.html" style="color:var(--gold-muted);font-size:0.8rem;text-decoration:none;white-space:nowrap;">
+            All champions <i class="fas fa-arrow-right" style="font-size:0.7rem;"></i>
+          </a>
+        </div>
+
+        <div class="course-card">
+          <div class="course-visual">
+            <svg viewBox="0 0 400 150" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+              <rect width="400" height="150" fill="#071208"/>
+              <!-- Fairways -->
+              <ellipse cx="55" cy="108" rx="32" ry="16" fill="#193d1f" opacity="0.9"/>
+              <rect x="46" y="30" width="18" height="80" rx="9" fill="#193d1f" opacity="0.9"/>
+              <ellipse cx="55" cy="30" rx="20" ry="13" fill="#1e4a26" opacity="0.9"/>
+
+              <ellipse cx="150" cy="112" rx="28" ry="14" fill="#193d1f" opacity="0.9"/>
+              <rect x="142" y="38" width="16" height="76" rx="8" fill="#193d1f" opacity="0.9"/>
+              <ellipse cx="150" cy="38" rx="22" ry="14" fill="#1e4a26" opacity="0.9"/>
+
+              <ellipse cx="245" cy="110" rx="30" ry="15" fill="#193d1f" opacity="0.9"/>
+              <path d="M238 110 Q230 72 245 42 Q258 72 252 110 Z" fill="#193d1f" opacity="0.9"/>
+              <ellipse cx="245" cy="42" rx="22" ry="14" fill="#1e4a26" opacity="0.9"/>
+
+              <ellipse cx="340" cy="106" rx="27" ry="14" fill="#193d1f" opacity="0.9"/>
+              <rect x="332" y="36" width="16" height="72" rx="8" fill="#193d1f" opacity="0.9"/>
+              <ellipse cx="340" cy="36" rx="20" ry="12" fill="#1e4a26" opacity="0.9"/>
+
+              <!-- Greens -->
+              <circle cx="55" cy="108" r="9" fill="#2a7535" opacity="0.95"/>
+              <circle cx="150" cy="112" r="8" fill="#2a7535" opacity="0.95"/>
+              <circle cx="245" cy="110" r="9" fill="#2a7535" opacity="0.95"/>
+              <circle cx="340" cy="106" r="8" fill="#2a7535" opacity="0.95"/>
+
+              <!-- Flags -->
+              <line x1="55" y1="108" x2="55" y2="90" stroke="#c9a84c" stroke-width="1.5" opacity="0.9"/>
+              <polygon points="55,90 64,94 55,98" fill="#c9a84c" opacity="0.9"/>
+
+              <!-- Water -->
+              <ellipse cx="198" cy="130" rx="22" ry="7" fill="#0d2535" opacity="0.8"/>
+
+              <!-- Bunkers -->
+              <ellipse cx="84" cy="103" rx="9" ry="5" fill="#c8b465" opacity="0.35"/>
+              <ellipse cx="280" cy="105" rx="8" ry="4" fill="#c8b465" opacity="0.35"/>
+            </svg>
+            <div class="course-overlay">
+              <h4>Indian Ridge</h4>
+              <span>Oxford, Ohio &bull; Est. 1999</span>
+            </div>
+          </div>
+
+          <div class="course-body">
+            <div class="course-stat-row">
+              <div class="cs"><span class="cs-val">Par 72</span><span class="cs-lbl">Championship</span></div>
+              <div class="cs"><span class="cs-val">7,001 yds</span><span class="cs-lbl">Back Tees</span></div>
+              <div class="cs"><span class="cs-val">Slope 130</span><span class="cs-lbl">Difficulty</span></div>
+              <div class="cs"><span class="cs-val">73.3</span><span class="cs-lbl">Rating</span></div>
             </div>
 
-            <div class="info-card">
-                <div class="card-icon">
-                    <i class="fas fa-trophy"></i>
-                </div>
-                <div class="card-content">
-                    <h3>League Standings</h3>
-                    <div class="standings">
-                        <div class="standings-header">
-                            <span>Rank</span>
-                            <span>Player</span>
-                            <span>Stroke Avg</span>
-                        </div>
-                        <div class="standings-row">
-                            <span>1</span>
-                            <span>Brian Creelman</span>
-                            <span>35.5</span>
-                        </div>
-                        <div class="standings-row">
-                            <span>2</span>
-                            <span>Daniel Tracy</span>
-                            <span>37.0</span>
-                        </div>
-                        <div class="standings-row">
-                            <span>3</span>
-                            <span>Randy Bulach</span>
-                            <span>37.5</span>
-                        </div>
-                        <div class="standings-row">
-                            <span>4</span>
-                            <span>Zach Meister</span>
-                            <span>37.5</span>
-                        </div>
-                        <div class="standings-row">
-                            <span>5</span>
-                            <span>Zak Curry</span>
-                            <span>38</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="info-card">
-                <div class="card-icon">
-                  <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <div class="card-content">
-                  <h3>Our Course</h3>
-                  <div class="courses">
-                    <div class="course">
-                      <h4>Indian Ridge Golf Club</h4>
-                      <p><strong>Location:</strong> 2600 Oxford Millville Road, Oxford, OH 45056</p>
-                      <p><strong>Designer:</strong> Brian Huntley (1999)</p>
-                      <p><strong>Par/Yardage:</strong> Par 72, 7,001 yards from the back tees (Slope 130; Rating 73.3)</p>
-                      <p><strong>Signature Hole:</strong> #7 – high risk high reward.</p>
-                      <p><strong>Features:</strong>
-                         <ul>
-                           <li>Meticulously maintained bent-grass fairways, tees & greens</li>
-                           <li>Four sets of tees: Black (7,001 yds), Blue (6,531 yds), White (6,022 yds), Green (5,063 yds)</li>
-                           <li>Driving range, chipping area & putting green</li>
-                         </ul>
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            <div style="margin-bottom:1rem;">
+              <div style="font-size:0.66rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Tee Options</div>
+              <div class="tee-row">
+                <span class="tee-badge tb-black"><span class="tee-dot"></span>Black 7,001</span>
+                <span class="tee-badge tb-blue"><span class="tee-dot"></span>Blue 6,531</span>
+                <span class="tee-badge tb-white"><span class="tee-dot"></span>White 6,022</span>
+                <span class="tee-badge tb-green"><span class="tee-dot"></span>Green 5,063</span>
               </div>
-        </section>
-    </main>
+            </div>
+
+            <div style="font-size:0.8rem;color:var(--muted);">
+              <i class="fas fa-map-marker-alt" style="color:var(--gold-muted);margin-right:0.4rem;"></i>
+              2600 Oxford Millville Rd, Oxford OH 45056
+            </div>
+          </div>
+        </div>
+
+        <div class="quick-card">
+          <div class="quick-card-title">League Essentials</div>
+          <div class="fact-row">
+            <i class="fas fa-users"></i>
+            <span class="fact-lbl">Format</span>
+            <span class="fact-val">2-Man Scramble</span>
+          </div>
+          <div class="fact-row">
+            <i class="fas fa-clock"></i>
+            <span class="fact-lbl">Tee Time</span>
+            <span class="fact-val">5:00 PM Fridays</span>
+          </div>
+          <div class="fact-row">
+            <i class="fas fa-dollar-sign"></i>
+            <span class="fact-lbl">League Fee</span>
+            <span class="fact-val">$100 / season</span>
+          </div>
+          <div class="fact-row">
+            <i class="fas fa-golf-ball"></i>
+            <span class="fact-lbl">Green Fee</span>
+            <span class="fact-val">$29 / week</span>
+          </div>
+          <div class="fact-row">
+            <i class="fas fa-trophy"></i>
+            <span class="fact-lbl">Scoring</span>
+            <span class="fact-val">Best 6 of 14</span>
+          </div>
+          <div class="fact-row">
+            <i class="fas fa-calendar-check"></i>
+            <span class="fact-lbl">RSVP By</span>
+            <span class="fact-val">Wednesday night</span>
+          </div>
+          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
+            <a href="rules.html" style="display:flex;align-items:center;justify-content:space-between;color:var(--gold);text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.04em;">
+              Full rules &amp; format
+              <i class="fas fa-arrow-right" style="font-size:0.72rem;"></i>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <div id="footer"></div>
 </body>
-<div id="footer"></div>
 </html>
