@@ -225,6 +225,55 @@
 
     .section-note { font-size: 0.8rem; color: var(--muted); margin-top: 1.5rem; }
     .section-note i { color: var(--gold-muted); margin-right: 0.3rem; }
+
+    /* Tier badges */
+    .tier-badge {
+      display: inline-block; padding: 0.1rem 0.45rem; border-radius: 2px;
+      font-family: var(--sans); font-size: 0.65rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase; margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+    .tier-a { background: rgba(201,168,76,0.15); color: var(--gold-bright); border: 1px solid rgba(201,168,76,0.3); }
+    .tier-b { background: rgba(180,180,180,0.1); color: #b0b0b0; border: 1px solid rgba(180,180,180,0.25); }
+    .tier-c { background: rgba(160,100,60,0.12); color: #c07848; border: 1px solid rgba(160,100,60,0.3); }
+
+    /* Tier assignments panel */
+    .tier-section { margin-bottom: 2.5rem; }
+    .tier-section-header {
+      display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+      padding-bottom: 0.75rem; border-bottom: 1px solid var(--border);
+    }
+    .tier-letter {
+      font-family: var(--serif-display); font-size: 2rem; font-weight: 700;
+      letter-spacing: 0.04em; line-height: 1;
+    }
+    .tier-letter.a { color: var(--gold-bright); }
+    .tier-letter.b { color: #b0b0b0; }
+    .tier-letter.c { color: #c07848; }
+    .tier-section-meta { font-size: 0.78rem; color: var(--muted); }
+    .tier-section-meta strong { color: var(--cream); }
+    .tier-players-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;
+    }
+    .tier-player-row {
+      background: var(--navy-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.6rem 1rem;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .tier-player-row.ta { border-left: 3px solid rgba(201,168,76,0.5); }
+    .tier-player-row.tb { border-left: 3px solid rgba(180,180,180,0.3); }
+    .tier-player-row.tc { border-left: 3px solid rgba(160,100,60,0.4); }
+    .tier-rank-num {
+      font-family: var(--serif-display); font-size: 0.9rem; color: var(--muted);
+      width: 24px; text-align: center; flex-shrink: 0;
+    }
+    .tier-player-name { font-size: 0.88rem; color: var(--white); font-weight: 500; }
+    .tier-handicap {
+      margin-left: auto; font-size: 0.75rem; font-weight: 600;
+      color: var(--muted); white-space: nowrap;
+    }
+    .tier-handicap.hcp-b { color: #9ab0c8; }
+    .tier-handicap.hcp-c { color: #c09060; }
   </style>
 </head>
 <body>
@@ -244,6 +293,7 @@
       <div class="lb-tabs">
         <button class="lb-tab active" onclick="showTab('standings')">Standings</button>
         <button class="lb-tab" onclick="showTab('weekly')">Weekly Scores</button>
+        <button class="lb-tab" onclick="showTab('tiers')">Tiers</button>
         <button class="lb-tab" onclick="showTab('championship')">Championship</button>
         <button class="lb-tab" onclick="showTab('admin')" style="margin-left:auto;">
           <i class="fas fa-lock" style="font-size:0.7rem;margin-right:0.4rem;"></i>Admin
@@ -264,6 +314,7 @@
           <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted round</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped (over minimum)</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+          <div class="legend-item"><span class="tier-badge tier-a">A</span> No handicap &nbsp;<span class="tier-badge tier-b">B</span> −1/round &nbsp;<span class="tier-badge tier-c">C</span> −2/round</div>
         </div>
 
         <table class="lb-table" id="standings-tbody-wrap">
@@ -271,8 +322,10 @@
             <tr>
               <th class="c" style="width:52px;">Rank</th>
               <th>Player</th>
-              <th class="r">Avg</th>
-              <th class="r hide-mobile">Strokes</th>
+              <th class="c hide-mobile">Tier</th>
+              <th class="c hide-mobile">Season Rank</th>
+              <th class="r">Adj. Avg</th>
+              <th class="r hide-mobile">Adj. Total</th>
               <th class="c">Played</th>
               <th class="c hide-mobile">Dropped</th>
             </tr>
@@ -282,7 +335,7 @@
 
         <p class="section-note">
           <i class="fas fa-info-circle"></i>
-          Standings based on best 6 rounds. Scores of 0 indicate the player did not attend that week.
+          Standings based on best 6 rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores.
         </p>
       </div>
 
@@ -297,6 +350,7 @@
           <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+          <div class="legend-item" style="color:var(--muted);font-size:0.74rem;">Scores shown are handicap-adjusted</div>
         </div>
 
         <div class="weekly-scroll">
@@ -304,6 +358,75 @@
             <thead id="weekly-thead"></thead>
             <tbody id="weekly-tbody"></tbody>
           </table>
+        </div>
+      </div>
+
+      <!-- TIERS -->
+      <div id="panel-tiers" class="lb-panel">
+        <div style="margin-bottom:1.5rem;">
+          <span class="section-label">2026 Season</span>
+          <h2>Tier Assignments</h2>
+        </div>
+        <p style="font-size:0.86rem;color:var(--muted);margin-bottom:2rem;line-height:1.6;">
+          Players are seeded into three tiers based on prior season results. During regular season rounds, Tier B players receive a <strong style="color:#b0b0b0;">−1 stroke handicap</strong> per round and Tier C players receive a <strong style="color:#c07848;">−2 stroke handicap</strong>. Championship day is played straight up with no handicaps.
+        </p>
+
+        <div class="tier-section">
+          <div class="tier-section-header">
+            <span class="tier-letter a">A</span>
+            <div>
+              <div style="font-family:var(--sans);font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--gold);">Tier A — Top Seeds</div>
+              <div class="tier-section-meta"><strong>No handicap</strong> · Ranks 1–3</div>
+            </div>
+          </div>
+          <div class="tier-players-grid">
+            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+          </div>
+        </div>
+
+        <div class="tier-section">
+          <div class="tier-section-header">
+            <span class="tier-letter b">B</span>
+            <div>
+              <div style="font-family:var(--sans);font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#999;">Tier B — Mid Seeds</div>
+              <div class="tier-section-meta"><strong style="color:#b0b0b0;">−1 stroke per round</strong> · Ranks 4–15</div>
+            </div>
+          </div>
+          <div class="tier-players-grid">
+            <div class="tier-player-row tb"><span class="tier-rank-num">4</span><span class="tier-player-name">Steve Griffin</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">5</span><span class="tier-player-name">Joe McConnell</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">6</span><span class="tier-player-name">Tony Bulach</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">7</span><span class="tier-player-name">Joey Jacobs</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">8</span><span class="tier-player-name">Brian Creelman</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">9</span><span class="tier-player-name">Bruce Tedesco</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">10</span><span class="tier-player-name">Dave Tracy</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">11</span><span class="tier-player-name">Hobie Bolton</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">12</span><span class="tier-player-name">Cody Vatter</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">13</span><span class="tier-player-name">James Nelson</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">14</span><span class="tier-player-name">Mike Tracy</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">15</span><span class="tier-player-name">Dan Heitman</span><span class="tier-handicap hcp-b">−1</span></div>
+          </div>
+        </div>
+
+        <div class="tier-section">
+          <div class="tier-section-header">
+            <span class="tier-letter c">C</span>
+            <div>
+              <div style="font-family:var(--sans);font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#c07848;">Tier C — Lower Seeds</div>
+              <div class="tier-section-meta"><strong style="color:#c07848;">−2 strokes per round</strong> · Ranks 16–22</div>
+            </div>
+          </div>
+          <div class="tier-players-grid">
+            <div class="tier-player-row tc"><span class="tier-rank-num">16</span><span class="tier-player-name">AJ Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">17</span><span class="tier-player-name">Andrew Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">18</span><span class="tier-player-name">Dan Hirsch</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">19</span><span class="tier-player-name">Daniel Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">20</span><span class="tier-player-name">Dave Eads</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">21</span><span class="tier-player-name">Josh McConnell</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">22</span><span class="tier-player-name">Christian Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
+          </div>
         </div>
       </div>
 
@@ -358,7 +481,7 @@
 
           <p class="admin-note">
             <i class="fas fa-info-circle"></i>
-            Scores are saved locally in this browser. Best 6 rounds are counted automatically — dropped rounds are highlighted in orange on the public view. Enter 0 or leave blank for absent players.
+            Enter raw (unadjusted) scores as played. Tier handicaps (B: −1, C: −2) are applied automatically in standings and weekly views. Best 6 adjusted rounds are counted. Enter 0 or leave blank for absent players.
           </p>
 
           <!-- Championship editor -->
@@ -404,6 +527,43 @@
       'Aug 7','Aug 14','Aug 21'
     ];
 
+    // Season rank from prior year (used as pairing tiebreaker)
+    const SEASON_RANK = {
+      'Brad Minges': 1, 'Randy Bulach': 2, 'Zak Curry': 3,
+      'Steve Griffin': 4, 'Joe McConnell': 5, 'Tony Bulach': 6,
+      'Joey Jacobs': 7, 'Brian Creelman': 8, 'Bruce Tedesco': 9,
+      'Dave Tracy': 10, 'Hobie Bolton': 11, 'Cody Vatter': 12,
+      'James Nelson': 13, 'Mike Tracy': 14, 'Dan Heitman': 15,
+      'AJ Meyer': 16, 'Andrew Meyer': 17, 'Dan Hirsch': 18,
+      'Daniel Tracy': 19, 'Dave Eads': 20, 'Josh McConnell': 21,
+      'Christian Tracy': 22
+    };
+
+    function getSeasonRank(name) { return SEASON_RANK[name] ?? 99; }
+
+    // Tier assignments: A = scratch, B = -1/round, C = -2/round
+    const TIER_A = new Set(['Brad Minges','Randy Bulach','Zak Curry']);
+    const TIER_B = new Set(['Steve Griffin','Joe McConnell','Tony Bulach','Joey Jacobs','Brian Creelman','Bruce Tedesco','Dave Tracy','Hobie Bolton','Cody Vatter','James Nelson','Mike Tracy','Dan Heitman']);
+    const TIER_C = new Set(['AJ Meyer','Andrew Meyer','Dan Hirsch','Daniel Tracy','Dave Eads','Josh McConnell','Christian Tracy']);
+
+    function getPlayerTier(name) {
+      if (TIER_A.has(name)) return 'A';
+      if (TIER_B.has(name)) return 'B';
+      if (TIER_C.has(name)) return 'C';
+      return 'A'; // default
+    }
+
+    function getTierHandicap(name) {
+      const t = getPlayerTier(name);
+      return t === 'B' ? 1 : t === 'C' ? 2 : 0;
+    }
+
+    // Apply tier handicap to a raw score (subtract strokes, lower is better)
+    function adjustScore(name, rawScore) {
+      if (rawScore <= 0) return rawScore;
+      return rawScore - getTierHandicap(name);
+    }
+
     // ── DATA ───────────────────────────────────────────────────────
     function loadData() {
       try { return JSON.parse(localStorage.getItem('owga_scores_' + SEASON_YEAR) || '{}'); }
@@ -425,13 +585,14 @@
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
     // Returns { counted: [], dropped: [], avg, total, played, bestScore }
-    function calcPlayer(scores) {
-      // scores = array of up to TOTAL_WEEKS numbers (0 = absent)
-      const attended = scores
-        .map((s, i) => ({ score: s, week: i }))
-        .filter(x => x.score > 0);
+    // rawScores = entered scores; adjusted scores used for ranking
+    function calcPlayer(name, rawScores) {
+      const hcp = getTierHandicap(name);
+      const attended = rawScores
+        .map((s, i) => ({ raw: s, score: s > 0 ? s - hcp : 0, week: i }))
+        .filter(x => x.raw > 0);
 
-      if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null };
+      if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null, bestWeek: null, countedWeeks: new Set() };
 
       const sorted = [...attended].sort((a, b) => a.score - b.score);
       const countedWeeks = new Set(sorted.slice(0, BEST_N).map(x => x.week));
@@ -451,16 +612,20 @@
       const data = loadData();
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
-        const calc = calcPlayer(scores);
-        return { name, ...calc };
+        const calc = calcPlayer(name, scores);
+        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), ...calc };
       });
 
-      // Sort: players who've played first (by avg asc), then unplayed alphabetically
+      // Sort: by adj avg asc (nulls last), tiebreak by season rank asc
+      // Unplayed players sorted by season rank
       rows.sort((a, b) => {
-        if (a.avg !== null && b.avg !== null) return a.avg - b.avg;
+        if (a.avg !== null && b.avg !== null) {
+          if (a.avg !== b.avg) return a.avg - b.avg;
+          return a.seasonRank - b.seasonRank; // tiebreak by season rank
+        }
         if (a.avg !== null) return -1;
         if (b.avg !== null) return 1;
-        return a.name.localeCompare(b.name);
+        return a.seasonRank - b.seasonRank; // both unplayed: sort by season rank
       });
 
       const tbody = document.getElementById('standings-tbody');
@@ -471,19 +636,21 @@
         const tr = document.createElement('tr');
         const isTop = rank <= 3 && row.avg !== null;
 
-        // Handle tied ranks
         if (i > 0 && row.avg !== null && rows[i-1].avg !== null && row.avg === rows[i-1].avg) {
-          // same rank as previous
+          // same rank as previous (tied avg — season rank broke display order but rank number stays tied)
         } else if (row.avg !== null) {
           rank = i + 1;
         }
 
         const displayRank = row.avg !== null ? rank : '—';
         const rankClass = isTop ? 'rank-num top' : 'rank-num';
+        const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
 
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
           <td class="player-name-cell">${row.name}</td>
+          <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
+          <td class="c stat-muted hide-mobile">${row.seasonRank}</td>
           <td class="r"><span class="${row.avg !== null ? 'avg-val' : 'stat-muted'}">${row.avg !== null ? row.avg.toFixed(2) : '—'}</span></td>
           <td class="r stat-muted hide-mobile">${row.total || '—'}</td>
           <td class="c stat-muted">${row.played || '—'}</td>
@@ -512,23 +679,26 @@
 
       // Build header
       const thead = document.getElementById('weekly-thead');
-      let headerHTML = '<tr><th class="left">Player</th>';
+      let headerHTML = '<tr><th class="left">Player</th><th class="left" style="padding-left:0.4rem;">Tier</th>';
       for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
         headerHTML += `<th>Wk ${w+1}<br><span style="font-weight:400;opacity:0.6;font-size:0.58rem;">${WEEK_DATES[w]}</span></th>`;
       }
-      headerHTML += '<th>Avg</th><th>Played</th></tr>';
+      headerHTML += '<th>Adj. Avg</th><th>Played</th></tr>';
       thead.innerHTML = headerHTML;
 
       // Sort players same as standings
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
-        const calc = calcPlayer(scores);
-        return { name, scores, ...calc };
+        const calc = calcPlayer(name, scores);
+        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), scores, ...calc };
       }).sort((a, b) => {
-        if (a.avg !== null && b.avg !== null) return a.avg - b.avg;
+        if (a.avg !== null && b.avg !== null) {
+          if (a.avg !== b.avg) return a.avg - b.avg;
+          return a.seasonRank - b.seasonRank;
+        }
         if (a.avg !== null) return -1;
         if (b.avg !== null) return 1;
-        return a.name.localeCompare(b.name);
+        return a.seasonRank - b.seasonRank;
       });
 
       const tbody = document.getElementById('weekly-tbody');
@@ -536,21 +706,24 @@
 
       rows.forEach(row => {
         const tr = document.createElement('tr');
-        let cells = `<td class="left">${row.name}</td>`;
+        const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
+        const hcp = getTierHandicap(row.name);
+        let cells = `<td class="left">${row.name}</td><td style="padding:0.45rem 0.35rem;"><span class="tier-badge ${tierClass}">${row.tier}</span></td>`;
 
         for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
-          const score = row.scores[w];
+          const raw = row.scores[w];
+          const adj = raw > 0 ? raw - hcp : 0;
           let cls = 'sc sc-empty';
           let display = '—';
 
-          if (score > 0) {
+          if (raw > 0) {
             const isBest = row.bestWeek === w;
             const isDropped = row.dropped.some(d => d.week === w);
             if (isBest) { cls = 'sc sc-best'; }
             else if (isDropped) { cls = 'sc sc-dropped'; }
             else { cls = 'sc sc-counted'; }
-            display = score;
-          } else if (score === 0 && w <= lastWeek) {
+            display = adj;
+          } else if (raw === 0 && w <= lastWeek) {
             cls = 'sc sc-zero';
             display = '—';
           }
@@ -566,7 +739,7 @@
 
       if (lastWeek < 0) {
         tbody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:3rem;color:var(--muted);font-style:italic;">No rounds recorded yet. Check back after the first Friday match.</td></tr>`;
-        thead.innerHTML = '<tr><th class="left">Player</th><th>Avg</th></tr>';
+        thead.innerHTML = '<tr><th class="left">Player</th><th>Tier</th><th>Adj. Avg</th></tr>';
       }
     }
 
@@ -663,10 +836,12 @@
 
       PLAYERS.forEach(name => {
         const score = data[name]?.[week] ?? '';
+        const tier = getPlayerTier(name);
+        const tierClass = tier === 'A' ? 'tier-a' : tier === 'B' ? 'tier-b' : 'tier-c';
         const row = document.createElement('div');
         row.className = 'score-row';
         row.innerHTML = `
-          <label>${name}</label>
+          <label>${name} <span class="tier-badge ${tierClass}">${tier}</span></label>
           <input type="number" min="0" max="60" placeholder="—"
             value="${score || ''}"
             class="${score ? 'has-score' : ''}"
