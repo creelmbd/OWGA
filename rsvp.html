@@ -559,14 +559,12 @@
       padding-left: 44px;
     }
     .solo-rotation-note {
-      font-size: 0.72rem;
+      font-size: 0.68rem;
       color: var(--muted);
-      margin-top: 0.4rem;
-      padding: 0.4rem 0.6rem;
-      background: rgba(230,160,20,0.06);
-      border: 1px solid rgba(230,160,20,0.15);
-      border-radius: 3px;
-      line-height: 1.5;
+      margin-top: 0.5rem;
+      padding-top: 0.4rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      line-height: 1.4;
     }
     .solo-rotation-note strong { color: #e8c060; }
   </style>
@@ -914,59 +912,39 @@
         const isRotation = type === 'rotation';
         const isOddOut   = type === 'oddout';
 
-        if (isRotation) {
-          // Rotation pair — real players, own tee-time slot, normal scramble
-          const anchor = pair.rotationAnchor || '';
-          html += `<div class="tee-pair solo-pair" style="grid-column:1/-1;">
-            <div class="tee-pair-label">⚑ Rotation Group — Solo Tee Time</div>
-            <div class="tee-pair-players">`;
-          players.forEach((player, pli) => {
-            const { name, avg, seasonRank } = player;
-            const tier    = TIER_MAP[name] || 'A';
-            const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
-            const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
-            html += `<div class="tee-player">
-              <span class="tp-stat">${statStr}</span>
-              <span class="tp-name">${name}</span>
-              <span class="tp-tier ${tierCls}">${tier}</span>
-            </div>`;
-            if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
-          });
-          html += `</div>
-            <div class="solo-rotation-note" style="margin-top:0.5rem;">
-              This group tees off alone this week. Rotation: <strong>Minges / Creelman / Dave Tracy</strong>
-              — anchored by <strong style="color:#e8c060;">${anchor}</strong> this round.
-            </div>
+        const pairLabel = isRotation
+          ? `⚑ Rotation`
+          : isOddOut
+          ? `⚑ Solo — 2 balls`
+          : `Pair ${pi + 1}`;
+
+        html += `<div class="tee-pair${(isRotation || isOddOut) ? ' solo-pair' : ''}">
+          <div class="tee-pair-label">${pairLabel}</div>
+          <div class="tee-pair-players">`;
+
+        players.forEach((player, pli) => {
+          const { name, avg, seasonRank } = player;
+          const tier    = TIER_MAP[name] || 'A';
+          const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
+          const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
+          html += `<div class="tee-player">
+            <span class="tp-stat">${statStr}</span>
+            <span class="tp-name">${name}</span>
+            <span class="tp-tier ${tierCls}">${tier}</span>
           </div>`;
-        } else {
-          const pairLabel = isOddOut
-            ? `⚑ Solo — plays 2 balls`
-            : `Pair ${pi + 1}`;
-          html += `<div class="tee-pair${isOddOut ? ' solo-pair' : ''}">
-            <div class="tee-pair-label">${pairLabel}</div>
-            <div class="tee-pair-players">`;
+          if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
+        });
 
-          players.forEach((player, pli) => {
-            const { name, avg, seasonRank } = player;
-            const tier    = TIER_MAP[name] || 'A';
-            const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
-            const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
-            html += `<div class="tee-player">
-              <span class="tp-stat">${statStr}</span>
-              <span class="tp-name">${name}</span>
-              <span class="tp-tier ${tierCls}">${tier}</span>
-            </div>`;
-            if (pli === 0 && players.length > 1) {
-              html += `<div class="tp-vs">with</div>`;
-            }
-          });
+        html += `</div>`;
 
-          if (isOddOut) {
-            html += `<div class="solo-rotation-note" style="margin-top:0.3rem;">Plays 2 balls this round.</div>`;
-          }
-
-          html += `</div></div>`; // close tee-pair-players, tee-pair
+        if (isRotation) {
+          const anchor = pair.rotationAnchor || '';
+          html += `<div class="solo-rotation-note">Tees off alone · rotates Minges / Creelman / Tracy · <strong style="color:#e8c060;">${anchor}</strong> this round</div>`;
+        } else if (isOddOut) {
+          html += `<div class="solo-rotation-note">Plays 2 balls this round</div>`;
         }
+
+        html += `</div>`; // close tee-pair
       });
 
       html += `</div></div>`; // close tee-group-pairs, tee-group
