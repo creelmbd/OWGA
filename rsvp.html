@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OWGA Golf League - RSVP</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="scripts.js" defer></script>
+  <style>
+    .rsvp-wrap {
+      padding: 2.5rem 5%;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* ── Toolbar ── */
+    .rsvp-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .rsvp-toolbar-left h2 { margin-bottom: 0.2rem; }
+    .rsvp-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 0.3rem;
+    }
+    .rsvp-meta i { color: var(--gold-muted); margin-right: 0.3rem; }
+    .rsvp-updated { font-size: 0.72rem; color: var(--muted); }
+
+    .btn-sheet {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: transparent;
+      border: 1px solid var(--gold-muted);
+      color: var(--gold);
+      padding: 0.55rem 1.1rem;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .btn-sheet:hover { background: var(--gold-glow); }
+    .btn-sheet i { font-size: 0.85rem; }
+
+    /* ── Legend ── */
+    .rsvp-legend {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+      font-size: 0.76rem;
+    }
+    .legend-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .lc-dot {
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    /* ── Tee-time banner ── */
+    .tee-banner {
+      background: rgba(201,168,76,0.08);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      padding: 0.65rem 1rem;
+      font-size: 0.82rem;
+      color: var(--gold);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .tee-banner i { flex-shrink: 0; }
+
+    /* ── Table wrapper ── */
+    .rsvp-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--navy-card);
+    }
+
+    .rsvp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      min-width: 900px;
+    }
+
+    /* Header row */
+    .rsvp-table thead tr th {
+      background: rgba(201,168,76,0.08);
+      border-bottom: 1px solid var(--border-strong);
+      padding: 0.6rem 0.5rem;
+      white-space: nowrap;
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-align: center;
+    }
+    .rsvp-table thead tr th.col-player {
+      text-align: left;
+      padding-left: 1rem;
+      min-width: 140px;
+    }
+    .rsvp-table thead tr th.col-champ {
+      color: var(--gold-bright);
+      background: rgba(201,168,76,0.14);
+      border-left: 1px solid var(--border-strong);
+    }
+    .rsvp-table thead tr th.col-count {
+      min-width: 38px;
+      color: var(--muted);
+      font-size: 0.6rem;
+    }
+
+    /* Sub-header (date row) */
+    .rsvp-table .date-row th {
+      background: rgba(201,168,76,0.04);
+      color: var(--muted);
+      font-size: 0.64rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+    .rsvp-table .date-row th.col-player { text-align: left; padding-left: 1rem; }
+
+    /* Body rows */
+    .rsvp-table tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      transition: background 0.12s;
+    }
+    .rsvp-table tbody tr:last-child { border-bottom: none; }
+    .rsvp-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+    /* Alternating rows */
+    .rsvp-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
+    .rsvp-table tbody tr:nth-child(even):hover { background: rgba(255,255,255,0.03); }
+
+    .rsvp-table td {
+      padding: 0.45rem 0.4rem;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .rsvp-table td.col-player {
+      text-align: left;
+      padding-left: 1rem;
+      font-weight: 500;
+      color: var(--white);
+      white-space: nowrap;
+    }
+    .rsvp-table td.col-count {
+      font-family: var(--serif-display);
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    /* RSVP status cells */
+    .rsvp-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      padding: 0.2rem 0.45rem;
+      border-radius: 3px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .rsvp-yes  { background: rgba(60,160,80,0.18);  color: #72d48a; }
+    .rsvp-no   { background: rgba(200,60,60,0.2);   color: #e07878; }
+    .rsvp-ttd  { background: rgba(230,160,20,0.18); color: #e8b84a; }
+    .rsvp-empty { color: rgba(255,255,255,0.15); font-size: 0.7rem; }
+
+    /* Championship column styling */
+    .col-champ-cell {
+      border-left: 1px solid var(--border);
+    }
+
+    /* ── Footer / counts ── */
+    .rsvp-table tfoot tr td {
+      padding: 0.5rem 0.4rem;
+      border-top: 1px solid var(--border-strong);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(201,168,76,0.04);
+    }
+    .rsvp-table tfoot tr td.col-player {
+      text-align: left;
+      padding-left: 1rem;
+      font-family: var(--sans);
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .count-yes  { color: #72d48a; }
+    .count-no   { color: #e07878; }
+    .count-open { color: var(--muted); }
+    .count-row-label { color: var(--muted); }
+
+    /* ── Loading / error states ── */
+    .rsvp-state {
+      padding: 4rem 2rem;
+      text-align: center;
+      color: var(--muted);
+    }
+    .rsvp-state i { font-size: 2rem; display: block; margin-bottom: 1rem; color: var(--border-strong); }
+    .rsvp-state p { font-size: 0.9rem; }
+    .rsvp-state a { color: var(--gold); }
+
+    @media (max-width: 700px) {
+      .rsvp-wrap { padding: 1.5rem 4%; }
+      .rsvp-toolbar { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ── Tabs ── */
+    .rsvp-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .rsvp-tab {
+      padding: 0.65rem 1.4rem;
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .rsvp-tab.active { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
+    .rsvp-tab:hover:not(.active) { color: var(--cream); }
+    .rsvp-panel { display: none; }
+    .rsvp-panel.active { display: block; }
+
+    /* ── Pairings ── */
+    .pairings-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .pairings-round-tag {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: var(--gold-glow);
+      border: 1px solid var(--border-strong);
+      padding: 0.25rem 0.75rem;
+      border-radius: 2px;
+    }
+    .pairings-note {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .pairings-note i { color: var(--gold-muted); margin-right: 0.35rem; }
+
+    .pairings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+    .pairing-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .pairing-card:hover { border-color: var(--border-strong); }
+    .pairing-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.9rem;
+      background: rgba(201,168,76,0.05);
+      border-bottom: 1px solid var(--border);
+    }
+    .pairing-group-num {
+      font-family: var(--serif-display);
+      font-size: 0.8rem;
+      color: var(--gold-muted);
+      letter-spacing: 0.1em;
+    }
+    .pairing-tee-tag {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .pairing-players {
+      padding: 0.6rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .pairing-player {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.4rem 0.5rem;
+      border-radius: 3px;
+    }
+    .pairing-player:first-child {
+      background: rgba(201,168,76,0.06);
+      border: 1px solid rgba(201,168,76,0.12);
+      border-radius: var(--radius);
+    }
+    .pp-rank {
+      font-family: var(--serif-display);
+      font-size: 1rem;
+      color: var(--gold-pale);
+      width: 24px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .pairing-player:first-child .pp-rank { color: var(--gold-bright); }
+    .pp-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--white);
+      flex: 1;
+    }
+    .pp-tier {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.1rem 0.35rem;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .pp-tier.ta { background: rgba(201,168,76,0.15); color: var(--gold-bright); border: 1px solid rgba(201,168,76,0.3); }
+    .pp-tier.tb { background: rgba(180,180,180,0.1); color: #b0b0b0; border: 1px solid rgba(180,180,180,0.25); }
+    .pp-tier.tc { background: rgba(160,100,60,0.12); color: #c07848; border: 1px solid rgba(160,100,60,0.3); }
+    .pp-vs { text-align: center; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; margin: 0.1rem 0; }
+
+    .solo-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .solo-badge {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .attending-list {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+    .attending-list-title {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    .attending-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .attending-chip {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+      font-size: 0.76rem;
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      color: var(--cream);
+    }
+    .attending-chip .chip-rank {
+      font-family: var(--serif-display);
+      font-size: 0.72rem;
+      color: var(--gold-muted);
+    }
+
+    .pairings-loading {
+      padding: 3rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .pairings-loading i { display: block; font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--border-strong); }
+
+    /* ── Tee time groups ── */
+    .tee-groups {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .tee-group {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .tee-group-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.7rem 1.1rem;
+      background: rgba(201,168,76,0.06);
+      border-bottom: 1px solid var(--border);
+    }
+    .tee-time-badge {
+      font-family: var(--serif-display);
+      font-size: 1.15rem;
+      color: var(--gold-bright);
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+    .tee-group-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-strong);
+      flex-shrink: 0;
+    }
+    .tee-group-label {
+      font-family: var(--sans);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .tee-group-count {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .tee-group-pairs {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+    .tee-pair {
+      padding: 0.75rem 1.1rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .tee-pair:last-child { border-right: none; }
+    .tee-pair-label {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+    .tee-pair.solo-pair { border-color: rgba(230,160,20,0.2); }
+    .tee-pair.solo-pair .tee-pair-label { color: #e8b84a; }
+    .tee-pair-players {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .tee-player {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .tp-stat {
+      font-family: var(--serif-display);
+      font-size: 0.82rem;
+      color: var(--gold-muted);
+      min-width: 38px;
+      flex-shrink: 0;
+    }
+    .tp-name {
+      font-size: 0.86rem;
+      font-weight: 500;
+      color: var(--white);
+      flex: 1;
+    }
+    .tp-tier {
+      font-family: var(--sans);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.1rem 0.3rem;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .tp-tier.ta { background: rgba(201,168,76,0.15); color: var(--gold-bright); border: 1px solid rgba(201,168,76,0.3); }
+    .tp-tier.tb { background: rgba(180,180,180,0.1); color: #b0b0b0; border: 1px solid rgba(180,180,180,0.25); }
+    .tp-tier.tc { background: rgba(160,100,60,0.12); color: #c07848; border: 1px solid rgba(160,100,60,0.3); }
+    .tp-vs {
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.15);
+      padding-left: 44px;
+      letter-spacing: 0.06em;
+    }
+    .solo-note {
+      font-size: 0.7rem;
+      color: #e8b84a;
+      margin-top: 0.35rem;
+      padding-left: 44px;
+    }
+    .solo-rotation-note {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      padding: 0.4rem 0.6rem;
+      background: rgba(230,160,20,0.06);
+      border: 1px solid rgba(230,160,20,0.15);
+      border-radius: 3px;
+      line-height: 1.5;
+    }
+    .solo-rotation-note strong { color: #e8c060; }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+
+  <main>
+
+
+    <div class="rsvp-wrap">
+
+      <div class="rsvp-toolbar">
+        <div class="rsvp-toolbar-left">
+          <h2>RSVP &amp; Pairings</h2>
+          <div class="rsvp-meta">
+            <span><i class="fas fa-sync-alt"></i>Synced from Google Sheets</span>
+            <span id="rsvp-updated"></span>
+          </div>
+        </div>
+        <a id="sheet-link" href="#" target="_blank" rel="noopener" class="btn-sheet">
+          <i class="fas fa-table"></i> Open &amp; Edit Sheet
+        </a>
+      </div>
+
+      <div class="rsvp-tabs">
+        <button class="rsvp-tab active" onclick="showRsvpTab('rsvp', this)">
+          <i class="fas fa-calendar-check" style="margin-right:0.4rem;font-size:0.75rem;"></i>RSVP
+        </button>
+        <button class="rsvp-tab" onclick="showRsvpTab('pairings', this)">
+          <i class="fas fa-users" style="margin-right:0.4rem;font-size:0.75rem;"></i>Pairings
+        </button>
+      </div>
+
+      <!-- PAIRINGS PANEL -->
+      <div id="panel-pairings" class="rsvp-panel">
+        <div class="pairings-loading" id="pairings-wrap">
+          <i class="fas fa-spinner fa-spin"></i>
+          Generating pairings…
+        </div>
+      </div>
+
+      <!-- FULL RSVP PANEL -->
+      <div id="panel-rsvp" class="rsvp-panel active">
+        <div class="tee-banner">
+          <i class="fas fa-flag"></i>
+          First tee time is 5:00 PM. If you know you'll be close to that time, let Brad and Creel know.
+        </div>
+
+        <div class="rsvp-legend">
+          <span class="legend-chip"><span class="lc-dot" style="background:rgba(60,160,80,0.5);"></span> Yes — attending</span>
+          <span class="legend-chip"><span class="lc-dot" style="background:rgba(200,60,60,0.5);"></span> No — not attending</span>
+          <span class="legend-chip"><span class="lc-dot" style="background:rgba(230,160,20,0.4);"></span> TTD — to be decided</span>
+          <span class="legend-chip"><span class="lc-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);"></span> No response yet</span>
+        </div>
+
+        <div class="rsvp-scroll">
+          <div id="rsvp-table-wrap">
+            <div class="rsvp-state">
+              <i class="fas fa-spinner fa-spin"></i>
+              <p>Loading RSVP data…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div id="footer"></div>
+
+  <script>
+  const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSZMDIpncWVdir9q51BOroY_7h27fuXAJJD2fJke7tZePz64r5j9zIBdVhwsj91T9NxhDsSClIcm6l/pub?gid=507810816&single=true&output=csv';
+  const SHEET_EDIT_URL = ''; // Optional: paste your normal Google Sheets share URL here
+
+  // Round schedule
+  const ROUND_DATES = [
+    'May 22','May 29','Jun 5','Jun 12','Jun 19','Jun 26',
+    'Jul 3','Jul 10','Jul 17','Jul 24','Jul 31',
+    'Aug 7','Aug 14','Aug 21'
+  ];
+  const ROUND_ISO = [
+    '2026-05-22','2026-05-29','2026-06-05','2026-06-12','2026-06-19','2026-06-26',
+    '2026-07-03','2026-07-10','2026-07-17','2026-07-24','2026-07-31',
+    '2026-08-07','2026-08-14','2026-08-21'
+  ];
+  const ROUND_LABELS = [
+    'Rd 1','Rd 2','Rd 3','Rd 4','Rd 5','Rd 6','Rd 7',
+    'Rd 8','Rd 9','Rd 10','Rd 11','Rd 12','Rd 13','Rd 14'
+  ];
+
+  // Season rank from prior year — drives pairing order
+  // Rank 1 = best (pairs with last), rank 22 = lowest (pairs with first)
+  const SEASON_RANK = {
+    'Brad Minges': 1,    'Randy Bulach': 2,    'Zak Curry': 3,
+    'Steve Griffin': 4,  'Joe McConnell': 5,   'Tony Bulach': 6,
+    'Joey Jacobs': 7,    'Brian Creelman': 8,  'Bruce Tedesco': 9,
+    'Dave Tracy': 10,    'Hobie Bolton': 11,   'Cody Vatter': 12,
+    'James Nelson': 13,  'Mike Tracy': 14,     'Dan Heitman': 15,
+    'AJ Meyer': 16,      'Andrew Meyer': 17,   'Dan Hirsch': 18,
+    'Daniel Tracy': 19,  'Dave Eads': 20,      'Josh McConnell': 21,
+    'Christian Tracy': 22
+  };
+
+  const TIER_MAP = {
+    'Brad Minges': 'A',    'Randy Bulach': 'A',    'Zak Curry': 'A',
+    'Steve Griffin': 'B',  'Joe McConnell': 'B',   'Tony Bulach': 'B',
+    'Joey Jacobs': 'B',    'Brian Creelman': 'B',  'Bruce Tedesco': 'B',
+    'Dave Tracy': 'B',     'Hobie Bolton': 'B',    'Cody Vatter': 'B',
+    'James Nelson': 'B',   'Mike Tracy': 'B',      'Dan Heitman': 'B',
+    'AJ Meyer': 'C',       'Andrew Meyer': 'C',    'Dan Hirsch': 'C',
+    'Daniel Tracy': 'C',   'Dave Eads': 'C',       'Josh McConnell': 'C',
+    'Christian Tracy': 'C'
+  };
+
+  // ── Tab switching ──────────────────────────────────────────────
+  function showRsvpTab(name, btn) {
+    document.querySelectorAll('.rsvp-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.rsvp-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── CSV parser ─────────────────────────────────────────────────
+  function parseCSV(text) {
+    const rows = [];
+    const lines = text.trim().split('\n');
+    for (const line of lines) {
+      const cols = [];
+      let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim());
+      rows.push(cols);
+    }
+    return rows;
+  }
+
+  function rsvpCell(val) {
+    const v = (val || '').trim();
+    const lv = v.toLowerCase();
+    if (lv === 'yes')  return `<span class="rsvp-cell rsvp-yes">Yes</span>`;
+    if (lv === 'no')   return `<span class="rsvp-cell rsvp-no">No</span>`;
+    if (lv === 'ttd')  return `<span class="rsvp-cell rsvp-ttd">TTD</span>`;
+    return `<span class="rsvp-empty">—</span>`;
+  }
+
+  // ── Pairing algorithm ──────────────────────────────────────────
+  // Sort attending players: best adj avg first (2dp), then season rank.
+  // No scores yet → season rank only. Then pair #1 with last, #2 with 2nd-last.
+  function getPlayerAvg(name) {
+    try {
+      const data = JSON.parse(localStorage.getItem('owga_scores_2026') || '{}');
+      const BEST_N = 6;
+      const hcp = TIER_MAP[name] === 'B' ? 1 : TIER_MAP[name] === 'C' ? 2 : 0;
+      const scores = Object.values(data[name] || {})
+        .map(s => parseInt(s))
+        .filter(s => s > 0)
+        .map(s => s - hcp)
+        .sort((a, b) => a - b)
+        .slice(0, BEST_N);
+      if (scores.length === 0) return null;
+      return scores.reduce((a, b) => a + b, 0) / scores.length;
+    } catch (e) { return null; }
+  }
+
+  function buildPairings(attending) {
+    const withStats = attending.map(name => ({
+      name,
+      avg: getPlayerAvg(name),
+      seasonRank: SEASON_RANK[name] ?? 99
+    }));
+
+    // Sort: adj avg (2dp) asc, then season rank asc; no scores → season rank only
+    withStats.sort((a, b) => {
+      if (a.avg !== null && b.avg !== null) {
+        const aDp = Math.round(a.avg * 100);
+        const bDp = Math.round(b.avg * 100);
+        if (aDp !== bDp) return aDp - bDp;
+        return a.seasonRank - b.seasonRank;
+      }
+      if (a.avg !== null) return -1;
+      if (b.avg !== null) return 1;
+      return a.seasonRank - b.seasonRank;
+    });
+
+    const isOdd = withStats.length % 2 === 1;
+    const pairs = [];
+    let lo = 0, hi = withStats.length - 1;
+    while (lo < hi) {
+      pairs.push({ players: [withStats[lo], withStats[hi]], type: 'regular' });
+      lo++; hi--;
+    }
+    // Odd player out — plays 2 balls, stays in a regular tee group
+    if (lo === hi) {
+      pairs.push({ players: [withStats[lo]], type: 'oddout' });
+    }
+
+    // If even players, find the pair containing Minges, Creelman, or Tracy
+    // (in that priority order) and mark it as the rotation pair.
+    // That pair gets its own solo tee-time slot — they still play as a normal
+    // 2-man scramble, just without another group sharing their tee time.
+    if (!isOdd) {
+      for (const rotationName of SOLO_ROTATION) {
+        const idx = pairs.findIndex(
+          p => p.type === 'regular' && p.players.some(pl => pl.name === rotationName)
+        );
+        if (idx !== -1) {
+          pairs[idx].type = 'rotation';
+          pairs[idx].rotationAnchor = rotationName;
+          break;
+        }
+      }
+    }
+
+    return pairs;
+  }
+
+  // ── Tee time helpers ──────────────────────────────────────────
+  const SOLO_ROTATION = ['Brad Minges', 'Brian Creelman', 'Dave Tracy'];
+  const FIRST_TEE_MIN = 9;
+  const TEE_INTERVAL  = 9;
+
+  function teeTimeStr(groupIdx) {
+    const totalMins = 17 * 60 + FIRST_TEE_MIN + groupIdx * TEE_INTERVAL;
+    const h24 = Math.floor(totalMins / 60);
+    const m   = totalMins % 60;
+    const h12 = h24 > 12 ? h24 - 12 : h24;
+    return `${h12}:${String(m).padStart(2, '0')} PM`;
+  }
+
+  // Distribute pairs into tee-time groups.
+  // - 'rotation' pair → its own middle tee-time slot (Minges/Creelman/Tracy rotation)
+  // - 'oddout' pair   → goes into a regular group alongside other pairs (plays 2 balls)
+  // - 'regular' pairs → grouped in 2s; odd leftover merges into last group
+  // Groups are randomized; rotation slot is always in the middle.
+  function assignTeeGroups(pairs) {
+    const rotationPair = pairs.find(p => p.type === 'rotation') || null;
+    const regularPairs = pairs.filter(p => p.type === 'regular');
+    const oddOutPair   = pairs.find(p => p.type === 'oddout') || null;
+
+    // Shuffle regular pairs
+    const shuffled = [...regularPairs];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    // If there's an odd-out player, append them to the last regular pair
+    // so they ride along in a group rather than getting a lone tee slot
+    if (oddOutPair) shuffled.push(oddOutPair);
+
+    const n = shuffled.length;
+    const groups = [];
+
+    if (n > 0) {
+      for (let i = 0; i < n; i += 2) {
+        // If next step would leave exactly 1 stranded, grab it now (group of 3)
+        if (i + 2 < n && n - (i + 2) === 1) {
+          groups.push(shuffled.slice(i, i + 3));
+          break;
+        }
+        groups.push(shuffled.slice(i, i + 2));
+      }
+    }
+
+    // Insert rotation solo into the middle
+    if (rotationPair) {
+      const insertAt = Math.ceil(groups.length / 2);
+      groups.splice(insertAt, 0, [rotationPair]);
+    }
+
+    return groups;
+  }
+
+  // ── Render pairings ────────────────────────────────────────────
+  function renderPairings(playerRows, roundCols) {
+    const wrap = document.getElementById('pairings-wrap');
+
+    // Find next upcoming round index
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let nextRoundIdx = ROUND_ISO.findIndex(d => d >= todayStr);
+    if (nextRoundIdx === -1) {
+      wrap.innerHTML = `<div class="pairings-loading"><i class="fas fa-trophy" style="color:var(--gold-muted);"></i>Season complete — no upcoming rounds.</div>`;
+      return;
+    }
+
+    const roundDate  = ROUND_DATES[nextRoundIdx];
+    const roundLabel = ROUND_LABELS[nextRoundIdx];
+    const sheetCol   = roundCols[nextRoundIdx];
+
+    // Determine attendance
+    const attending = [], notAttending = [];
+    playerRows.forEach(row => {
+      const name = (row[2] || '').trim();
+      if (!name) return;
+      const rsvp = (sheetCol !== undefined ? (row[sheetCol] || '') : '').trim().toLowerCase();
+      if (rsvp === 'no' || rsvp === 'ttd') notAttending.push(name);
+      else attending.push(name);
+    });
+
+    const pairs  = buildPairings(attending);
+    const groups = assignTeeGroups(pairs);
+    const isOdd  = attending.length % 2 === 1;
+
+    // ── Build HTML ──────────────────────────────────────────────
+    let html = `
+      <div class="pairings-header">
+        <div>
+          <span class="section-label">Upcoming Round</span>
+          <h2>${roundLabel} — Tee Times &amp; Pairings</h2>
+        </div>
+        <span class="pairings-round-tag">${roundDate} &bull; First tee 5:09 PM</span>
+      </div>
+      <p class="pairings-note">
+        <i class="fas fa-info-circle"></i>
+        Paired best-to-worst by adj. avg then season rank. Groups randomized.
+        Blank RSVP counts as attending.${isOdd ? ' <strong style="color:#e8b84a;">Odd number attending — solo player plays 2 balls.</strong>' : ''}
+      </p>
+      <div class="tee-groups">`;
+
+    groups.forEach((groupPairs, gi) => {
+      const teeTime = teeTimeStr(gi);
+
+      // Count actual players in this group (rotation slot has 0 players)
+      const playerCount = groupPairs.reduce((sum, p) => sum + p.players.length, 0);
+      const pairCount   = groupPairs.length;
+
+      html += `
+        <div class="tee-group">
+          <div class="tee-group-header">
+            <span class="tee-time-badge">${teeTime}</span>
+            <div class="tee-group-divider"></div>
+            <span class="tee-group-label">Tee ${gi + 1}</span>
+            <span class="tee-group-count">${pairCount} pair${pairCount !== 1 ? 's' : ''} · ${playerCount} player${playerCount !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="tee-group-pairs">`;
+
+      groupPairs.forEach((pair, pi) => {
+        const { players, type } = pair;
+        const isRotation = type === 'rotation';
+        const isOddOut   = type === 'oddout';
+
+        if (isRotation) {
+          // Rotation pair — real players, own tee-time slot, normal scramble
+          const anchor = pair.rotationAnchor || '';
+          html += `<div class="tee-pair solo-pair" style="grid-column:1/-1;">
+            <div class="tee-pair-label">⚑ Rotation Group — Solo Tee Time</div>
+            <div class="tee-pair-players">`;
+          players.forEach((player, pli) => {
+            const { name, avg, seasonRank } = player;
+            const tier    = TIER_MAP[name] || 'A';
+            const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
+            const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
+            html += `<div class="tee-player">
+              <span class="tp-stat">${statStr}</span>
+              <span class="tp-name">${name}</span>
+              <span class="tp-tier ${tierCls}">${tier}</span>
+            </div>`;
+            if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
+          });
+          html += `</div>
+            <div class="solo-rotation-note" style="margin-top:0.5rem;">
+              This group tees off alone this week. Rotation: <strong>Minges / Creelman / Dave Tracy</strong>
+              — anchored by <strong style="color:#e8c060;">${anchor}</strong> this round.
+            </div>
+          </div>`;
+        } else {
+          const pairLabel = isOddOut
+            ? `⚑ Solo — plays 2 balls`
+            : `Pair ${pi + 1}`;
+          html += `<div class="tee-pair${isOddOut ? ' solo-pair' : ''}">
+            <div class="tee-pair-label">${pairLabel}</div>
+            <div class="tee-pair-players">`;
+
+          players.forEach((player, pli) => {
+            const { name, avg, seasonRank } = player;
+            const tier    = TIER_MAP[name] || 'A';
+            const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
+            const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
+            html += `<div class="tee-player">
+              <span class="tp-stat">${statStr}</span>
+              <span class="tp-name">${name}</span>
+              <span class="tp-tier ${tierCls}">${tier}</span>
+            </div>`;
+            if (pli === 0 && players.length > 1) {
+              html += `<div class="tp-vs">with</div>`;
+            }
+          });
+
+          if (isOddOut) {
+            html += `<div class="solo-rotation-note" style="margin-top:0.3rem;">Plays 2 balls this round.</div>`;
+          }
+
+          html += `</div></div>`; // close tee-pair-players, tee-pair
+        }
+      });
+
+      html += `</div></div>`; // close tee-group-pairs, tee-group
+    });
+
+    html += `</div>`; // close tee-groups
+
+    // ── Attending / not attending summary ──────────────────────
+    const allSorted = pairs.filter(p => p.type !== 'rotation').flatMap(p => p.players);
+    html += `
+      <div class="attending-list">
+        <div class="attending-list-title">
+          <i class="fas fa-check-circle" style="color:#72d48a;margin-right:0.3rem;"></i>
+          Attending (${attending.length})
+        </div>
+        <div class="attending-chips">`;
+    allSorted.forEach(player => {
+      const label = player.avg !== null ? player.avg.toFixed(2) : `#${player.seasonRank}`;
+      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}</span>`;
+    });
+    html += `</div>`;
+
+    if (notAttending.length > 0) {
+      html += `
+        <div class="attending-list-title" style="margin-top:1rem;">
+          <i class="fas fa-times-circle" style="color:#e07878;margin-right:0.3rem;"></i>
+          Not attending (${notAttending.length})
+        </div>
+        <div class="attending-chips">`;
+      notAttending.forEach(name => {
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    wrap.innerHTML = html;
+  }
+
+  // ── Main load ──────────────────────────────────────────────────
+  async function loadRSVP() {
+    const wrap     = document.getElementById('rsvp-table-wrap');
+    const updated  = document.getElementById('rsvp-updated');
+    const sheetBtn = document.getElementById('sheet-link');
+
+    if (SHEET_EDIT_URL) {
+      sheetBtn.href = SHEET_EDIT_URL;
+    } else {
+      sheetBtn.style.display = 'none';
+    }
+
+    try {
+      const res = await fetch(SHEET_CSV_URL + '&t=' + Date.now());
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+      const rows = parseCSV(text);
+      if (rows.length < 3) throw new Error('Unexpected sheet structure');
+
+      const headerRow = rows[0];
+
+      // Find championship column
+      let champCol = -1;
+      for (let c = headerRow.length - 1; c >= 0; c--) {
+        if ((headerRow[c] || '').toLowerCase().includes('champion')) { champCol = c; break; }
+      }
+
+      // Round columns: col 3 up to champCol (exclusive)
+      const roundCols = [];
+      const endCol = champCol > 0 ? champCol : headerRow.length;
+      for (let c = 3; c < endCol; c++) roundCols.push(c);
+
+      // Split player vs footer rows
+      const playerRows = [], footerRows = [];
+      let inFooter = false;
+      for (let r = 2; r < rows.length; r++) {
+        const nameCell = (rows[r][2] || '').trim();
+        if (!nameCell || nameCell.toLowerCase().startsWith('count') || nameCell.toLowerCase().startsWith('remaining')) {
+          inFooter = true;
+        }
+        if (inFooter) { if (nameCell) footerRows.push(rows[r]); }
+        else          { if (nameCell) playerRows.push(rows[r]); }
+      }
+
+      // Render pairings (uses same parsed data)
+      renderPairings(playerRows, roundCols);
+
+      // ── Build RSVP table ───────────────────────────────────────
+      let thead = '<thead><tr>';
+      thead += `<th class="col-count">Cnt</th><th class="col-player">Player</th>`;
+      roundCols.forEach((col, i) => { thead += `<th>${ROUND_LABELS[i] || `Rd ${i+1}`}</th>`; });
+      if (champCol > 0) thead += `<th class="col-champ">Champ</th>`;
+      thead += '</tr><tr class="date-row">';
+      thead += `<th class="col-player" colspan="2">Indian Ridge Golf Club</th>`;
+      roundCols.forEach((col, i) => { thead += `<th>${ROUND_DATES[i] || ''}</th>`; });
+      if (champCol > 0) thead += `<th>Aug 22</th>`;
+      thead += '</tr></thead>';
+
+      let tbody = '<tbody>';
+      playerRows.forEach(row => {
+        const count = (row[1] || '').trim();
+        const name  = (row[2] || '').trim();
+        if (!name) return;
+        tbody += `<tr><td class="col-count">${count || '—'}</td><td class="col-player">${name}</td>`;
+        roundCols.forEach(col => { tbody += `<td>${rsvpCell((row[col] || '').trim())}</td>`; });
+        if (champCol > 0) tbody += `<td class="col-champ-cell">${rsvpCell((row[champCol] || '').trim())}</td>`;
+        tbody += '</tr>';
+      });
+      tbody += '</tbody>';
+
+      let tfoot = '<tfoot>';
+      footerRows.forEach(frow => {
+        const label = (frow[2] || '').trim();
+        if (!label) return;
+        const cls = label.toLowerCase().includes('yes') ? 'count-yes' : label.toLowerCase().includes('no') ? 'count-no' : 'count-open';
+        tfoot += `<tr><td></td><td class="col-player ${cls}">${label}</td>`;
+        roundCols.forEach(col => { tfoot += `<td class="${cls}">${(frow[col] || '').trim() || '—'}</td>`; });
+        if (champCol > 0) tfoot += `<td class="${cls} col-champ-cell">${(frow[champCol] || '').trim() || '—'}</td>`;
+        tfoot += '</tr>';
+      });
+      tfoot += '</tfoot>';
+
+      wrap.innerHTML = `<table class="rsvp-table">${thead}${tbody}${tfoot}</table>`;
+      updated.textContent = `Updated ${new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+
+    } catch (err) {
+      console.error('RSVP load failed:', err);
+      document.getElementById('pairings-wrap').innerHTML = `<div class="pairings-loading"><i class="fas fa-exclamation-triangle" style="color:var(--gold-muted);"></i>Couldn't load data — check sheet URL.</div>`;
+      wrap.innerHTML = `<div class="rsvp-state"><i class="fas fa-exclamation-triangle" style="color:var(--gold-muted);"></i><p>Couldn't load RSVP data.<br>Check that the sheet is published and the URL is correct.</p></div>`;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadRSVP);
+  </script>
+</body>
+</html>

@@ -616,16 +616,17 @@
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), ...calc };
       });
 
-      // Sort: by adj avg asc (nulls last), tiebreak by season rank asc
-      // Unplayed players sorted by season rank
+      // Sort: no scores → by season rank; scores → by adj avg (2dp) then season rank
       rows.sort((a, b) => {
         if (a.avg !== null && b.avg !== null) {
-          if (a.avg !== b.avg) return a.avg - b.avg;
-          return a.seasonRank - b.seasonRank; // tiebreak by season rank
+          const aDp = Math.round(a.avg * 100);
+          const bDp = Math.round(b.avg * 100);
+          if (aDp !== bDp) return aDp - bDp;
+          return a.seasonRank - b.seasonRank;
         }
         if (a.avg !== null) return -1;
         if (b.avg !== null) return 1;
-        return a.seasonRank - b.seasonRank; // both unplayed: sort by season rank
+        return a.seasonRank - b.seasonRank; // both unplayed: season rank only
       });
 
       const tbody = document.getElementById('standings-tbody');
@@ -693,7 +694,9 @@
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), scores, ...calc };
       }).sort((a, b) => {
         if (a.avg !== null && b.avg !== null) {
-          if (a.avg !== b.avg) return a.avg - b.avg;
+          const aDp = Math.round(a.avg * 100);
+          const bDp = Math.round(b.avg * 100);
+          if (aDp !== bDp) return aDp - bDp;
           return a.seasonRank - b.seasonRank;
         }
         if (a.avg !== null) return -1;
