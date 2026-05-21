@@ -285,11 +285,11 @@
       font-family: var(--sans); font-size: 0.62rem; font-weight: 600;
       letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
       padding: 0.4rem 0.25rem 0.3rem;
-      display: grid; grid-template-columns: 44px 1fr 38px 52px 46px; gap: 0.25rem;
+      display: grid; grid-template-columns: 52px 1fr 46px 46px; gap: 0.25rem;
     }
     .wh-row {
-      display: grid; grid-template-columns: 44px 1fr 38px 52px 46px;
-      gap: 0.25rem; align-items: center; padding: 0.38rem 0.25rem;
+      display: grid; grid-template-columns: 52px 1fr 46px 46px;
+      gap: 0.25rem; align-items: center; padding: 0.42rem 0.25rem;
       border-radius: 3px; border-bottom: 1px solid rgba(255,255,255,0.035);
       transition: background 0.15s;
     }
@@ -299,13 +299,22 @@
       background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.18);
       border-radius: var(--radius); margin: 0.1rem 0;
     }
-    .wh-time { font-family: var(--sans); font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .wh-time {
+      font-family: var(--sans); font-size: 0.76rem; font-weight: 600;
+      color: var(--muted); line-height: 1.3;
+    }
     .wh-row.tee-time .wh-time { color: var(--gold); }
-    .wh-icon { font-size: 1rem; text-align: center; }
-    .wh-cond { font-size: 0.76rem; color: var(--cream); }
+    .wh-cond {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.76rem; color: var(--cream);
+    }
+    .wh-cond-emoji { font-size: 1rem; flex-shrink: 0; }
     .wh-row.tee-time .wh-cond { color: var(--white); }
-    .wh-temp { font-family: var(--serif-display); font-size: 0.95rem; color: var(--gold-pale); text-align: right; }
-    .wh-precip { font-size: 0.72rem; color: var(--muted); text-align: right; }
+    .wh-temp {
+      font-family: var(--serif-display); font-size: 0.95rem;
+      color: var(--gold-pale); text-align: right;
+    }
+    .wh-precip { font-size: 0.76rem; color: var(--muted); text-align: right; font-weight: 500; }
     .wh-precip.wet { color: #7ab0d8; }
 
     .weather-loading { padding: 2rem 1.25rem; text-align: center; color: var(--muted); font-size: 0.82rem; }
@@ -323,7 +332,7 @@
   <main>
     <section class="hero">
       <div class="hero-content">
-        <span class="hero-eyebrow">Est. 2013 &bull; Oxford, Ohio</span>
+        <span class="hero-eyebrow">Est. 2019 &bull; Oxford, Ohio</span>
         <h1>Okeana Whackers<br>Golf Association</h1>
       </div>
     </section>
@@ -560,10 +569,10 @@
         </div>
         <div class="weather-hourly">
           <div class="wh-header">
-            <span>Time</span><span>Conditions</span>
+            <span>Time</span>
+            <span>Conditions</span>
             <span style="text-align:right">Temp</span>
             <span style="text-align:right">Rain</span>
-            <span style="text-align:right">Wind</span>
           </div>`;
 
       for (const hr of SHOW_HOURS) {
@@ -573,11 +582,11 @@
         const isTee     = hr === TEE_HOUR;
         const precip    = precips[idx];
         const displayHr = hr > 12 ? `${hr-12} PM` : '12 PM';
+        const teeTag    = isTee ? `<br><span style="font-size:0.6rem;letter-spacing:0.08em;">TEE</span>` : '';
         html += `
           <div class="wh-row${isTee ? ' tee-time' : ''}">
-            <div class="wh-time">${displayHr}${isTee ? ' <span style="font-size:0.6rem;color:var(--gold);letter-spacing:0.06em;">TEE</span>' : ''}</div>
-            <div class="wh-icon">${emoji}</div>
-            <div class="wh-cond">${label}</div>
+            <div class="wh-time">${displayHr}${teeTag}</div>
+            <div class="wh-cond"><span class="wh-cond-emoji">${emoji}</span>${label}</div>
             <div class="wh-temp">${Math.round(temps[idx])}°</div>
             <div class="wh-precip ${precip >= 20 ? 'wet' : ''}">${precip >= 20 ? precip+'%' : '—'}</div>
           </div>`;
