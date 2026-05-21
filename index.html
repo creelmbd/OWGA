@@ -232,39 +232,89 @@
     .tee-badge.tb-green { background: rgba(80,160,80,0.1); color: #7dc47d; }
     .tee-badge.tb-green .tee-dot { background: #50a050; }
 
-    .quick-card {
+    @media (max-width: 960px) {
+      .home-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── WEATHER CARD ───────────────────────────────── */
+    .weather-card {
       background: var(--navy-card);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 1.25rem;
+      overflow: hidden;
     }
-    .quick-card-title {
+    .weather-header {
+      padding: 0.9rem 1.25rem 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .weather-header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.15rem;
+    }
+    .weather-title {
       font-family: var(--sans);
       font-size: 0.72rem;
       font-weight: 600;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--gold);
-      margin-bottom: 1rem;
-      padding-bottom: 0.75rem;
-      border-bottom: 1px solid var(--border);
     }
-    .fact-row {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.55rem 0;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-      font-size: 0.86rem;
-    }
-    .fact-row:last-child { border-bottom: none; }
-    .fact-row i { color: var(--gold-muted); width: 16px; text-align: center; flex-shrink: 0; font-size: 0.85rem; }
-    .fact-lbl { color: var(--muted); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    .fact-val { color: var(--cream); margin-left: auto; font-size: 0.84rem; text-align: right; }
+    .weather-updated { font-size: 0.65rem; color: var(--muted); }
+    .weather-round-label { font-family: var(--serif-body); font-size: 1rem; color: var(--white); margin-top: 0.2rem; }
+    .weather-round-date { font-size: 0.75rem; color: var(--muted); margin-top: 0.1rem; }
 
-    @media (max-width: 960px) {
-      .home-grid { grid-template-columns: 1fr; }
+    .weather-summary {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+      background: rgba(201,168,76,0.04);
     }
+    .ws-emoji { font-size: 2.4rem; line-height: 1; flex-shrink: 0; }
+    .ws-main { flex: 1; }
+    .ws-condition { font-family: var(--serif-body); font-size: 1.05rem; color: var(--white); line-height: 1.2; }
+    .ws-details { font-size: 0.76rem; color: var(--muted); margin-top: 0.25rem; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+    .ws-detail-chip { display: flex; align-items: center; gap: 0.25rem; }
+    .ws-detail-chip i { color: var(--gold-muted); font-size: 0.7rem; }
+    .ws-temp { font-family: var(--serif-display); font-size: 2.2rem; color: var(--gold-bright); line-height: 1; flex-shrink: 0; }
+    .ws-precip-tag { font-size: 0.68rem; font-weight: 600; text-align: center; margin-top: 0.2rem; color: #7ab0d8; }
+    .ws-precip-tag.dry { color: var(--muted); }
+
+    .weather-hourly { padding: 0.4rem 0.75rem 0.6rem; }
+    .wh-header {
+      font-family: var(--sans); font-size: 0.62rem; font-weight: 600;
+      letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+      padding: 0.4rem 0.25rem 0.3rem;
+      display: grid; grid-template-columns: 44px 1fr 38px 52px 46px; gap: 0.25rem;
+    }
+    .wh-row {
+      display: grid; grid-template-columns: 44px 1fr 38px 52px 46px;
+      gap: 0.25rem; align-items: center; padding: 0.38rem 0.25rem;
+      border-radius: 3px; border-bottom: 1px solid rgba(255,255,255,0.035);
+      transition: background 0.15s;
+    }
+    .wh-row:last-child { border-bottom: none; }
+    .wh-row:hover { background: rgba(255,255,255,0.03); }
+    .wh-row.tee-time {
+      background: rgba(201,168,76,0.07); border: 1px solid rgba(201,168,76,0.18);
+      border-radius: var(--radius); margin: 0.1rem 0;
+    }
+    .wh-time { font-family: var(--sans); font-size: 0.78rem; font-weight: 600; color: var(--muted); }
+    .wh-row.tee-time .wh-time { color: var(--gold); }
+    .wh-icon { font-size: 1rem; text-align: center; }
+    .wh-cond { font-size: 0.76rem; color: var(--cream); }
+    .wh-row.tee-time .wh-cond { color: var(--white); }
+    .wh-temp { font-family: var(--serif-display); font-size: 0.95rem; color: var(--gold-pale); text-align: right; }
+    .wh-precip { font-size: 0.72rem; color: var(--muted); text-align: right; }
+    .wh-precip.wet { color: #7ab0d8; }
+
+    .weather-loading { padding: 2rem 1.25rem; text-align: center; color: var(--muted); font-size: 0.82rem; }
+    .weather-loading i { display: block; font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--border-strong); }
+    .weather-error { padding: 1.25rem; font-size: 0.8rem; color: var(--muted); text-align: center; }
+    .weather-out-of-range { padding: 1.25rem; text-align: center; }
+    .weather-out-of-range .oor-emoji { font-size: 1.8rem; display: block; margin-bottom: 0.5rem; }
+    .weather-out-of-range p { font-size: 0.82rem; color: var(--muted); }
+    .weather-out-of-range strong { color: var(--cream); }
   </style>
 </head>
 <body>
@@ -350,6 +400,22 @@
           </a>
         </div>
 
+        <div class="weather-card">
+          <div class="weather-header">
+            <div class="weather-header-top">
+              <span class="weather-title"><i class="fas fa-cloud-sun" style="margin-right:0.4rem;"></i>Next Round Forecast</span>
+              <span class="weather-updated" id="weather-updated"></span>
+            </div>
+            <div class="weather-round-label" id="weather-round-label">&nbsp;</div>
+            <div class="weather-round-date" id="weather-round-date">&nbsp;</div>
+          </div>
+          <div id="weather-body">
+            <div class="weather-loading">
+              <i class="fas fa-spinner fa-spin"></i>Loading forecast…
+            </div>
+          </div>
+        </div>
+
         <div class="course-card">
           <div class="course-visual">
             <div class="course-overlay">
@@ -383,50 +449,156 @@
           </div>
         </div>
 
-        <div class="quick-card">
-          <div class="quick-card-title">League Essentials</div>
-          <div class="fact-row">
-            <i class="fas fa-users"></i>
-            <span class="fact-lbl">Format</span>
-            <span class="fact-val">2-Man Scramble</span>
-          </div>
-          <div class="fact-row">
-            <i class="fas fa-clock"></i>
-            <span class="fact-lbl">Tee Time</span>
-            <span class="fact-val">5:00 PM Fridays</span>
-          </div>
-          <div class="fact-row">
-            <i class="fas fa-dollar-sign"></i>
-            <span class="fact-lbl">League Fee</span>
-            <span class="fact-val">$100 / season</span>
-          </div>
-          <div class="fact-row">
-            <i class="fas fa-golf-ball"></i>
-            <span class="fact-lbl">Green Fee</span>
-            <span class="fact-val">$32 / week</span>
-          </div>
-          <div class="fact-row">
-            <i class="fas fa-trophy"></i>
-            <span class="fact-lbl">Scoring</span>
-            <span class="fact-val">Best 6 of 14</span>
-          </div>
-          <div class="fact-row">
-            <i class="fas fa-calendar-check"></i>
-            <span class="fact-lbl">RSVP By</span>
-            <span class="fact-val">Wednesday night</span>
-          </div>
-          <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);">
-            <a href="rules.html" style="display:flex;align-items:center;justify-content:space-between;color:var(--gold);text-decoration:none;font-size:0.82rem;font-weight:500;letter-spacing:0.04em;">
-              Full rules &amp; format
-              <i class="fas fa-arrow-right" style="font-size:0.72rem;"></i>
-            </a>
-          </div>
-        </div>
-
       </div>
     </div>
   </main>
 
   <div id="footer"></div>
+
+  <script>
+  const FRIDAY_ROUNDS = [
+    { date: '2026-05-22', label: 'Round 1'  }, { date: '2026-05-29', label: 'Round 2'  },
+    { date: '2026-06-05', label: 'Round 3'  }, { date: '2026-06-12', label: 'Round 4'  },
+    { date: '2026-06-19', label: 'Round 5'  }, { date: '2026-06-26', label: 'Round 6'  },
+    { date: '2026-07-03', label: 'Round 7'  }, { date: '2026-07-10', label: 'Round 8'  },
+    { date: '2026-07-17', label: 'Round 9'  }, { date: '2026-07-24', label: 'Round 10' },
+    { date: '2026-07-31', label: 'Round 11' }, { date: '2026-08-07', label: 'Round 12' },
+    { date: '2026-08-14', label: 'Round 13' }, { date: '2026-08-21', label: 'Round 14' },
+  ];
+
+  function wmoInfo(code) {
+    if (code === 0) return { label: 'Clear sky',     emoji: '☀️' };
+    if (code === 1) return { label: 'Mainly clear',  emoji: '🌤️' };
+    if (code === 2) return { label: 'Partly cloudy', emoji: '⛅' };
+    if (code === 3) return { label: 'Overcast',      emoji: '☁️' };
+    if (code <= 49) return { label: 'Foggy',         emoji: '🌫️' };
+    if (code <= 55) return { label: 'Drizzle',       emoji: '🌦️' };
+    if (code <= 65) return { label: 'Rain',          emoji: '🌧️' };
+    if (code <= 75) return { label: 'Snow',          emoji: '❄️'  };
+    if (code <= 82) return { label: 'Rain showers',  emoji: '🌧️' };
+    if (code <= 86) return { label: 'Snow showers',  emoji: '🌨️' };
+    if (code <= 99) return { label: 'Thunderstorm',  emoji: '⛈️'  };
+    return                 { label: 'Unknown',       emoji: '🌡️' };
+  }
+
+  function prettyDate(iso) {
+    const [, m, d] = iso.split('-');
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const dt = new Date(iso + 'T12:00:00');
+    return `${days[dt.getDay()]}, ${months[parseInt(m)-1]} ${parseInt(d)}`;
+  }
+
+  async function loadWeatherForecast() {
+    const body       = document.getElementById('weather-body');
+    const updatedEl  = document.getElementById('weather-updated');
+    const roundLabel = document.getElementById('weather-round-label');
+    const roundDate  = document.getElementById('weather-round-date');
+
+    const todayStr  = new Date().toISOString().slice(0, 10);
+    const nextRound = FRIDAY_ROUNDS.find(r => r.date >= todayStr);
+
+    if (!nextRound) {
+      roundLabel.textContent = 'Season complete';
+      roundDate.textContent  = 'No upcoming rounds';
+      body.innerHTML = '<div class="weather-error">The 2026 season has concluded.</div>';
+      return;
+    }
+
+    roundLabel.textContent = nextRound.label + ' — Indian Ridge';
+    roundDate.textContent  = prettyDate(nextRound.date);
+
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() + 16);
+    if (nextRound.date > cutoff.toISOString().slice(0, 10)) {
+      body.innerHTML = `
+        <div class="weather-out-of-range">
+          <span class="oor-emoji">📅</span>
+          <p>Forecast available within<br><strong>16 days of the round.</strong></p>
+          <p style="margin-top:0.5rem;font-size:0.76rem;">Check back closer to ${prettyDate(nextRound.date)}.</p>
+        </div>`;
+      return;
+    }
+
+    try {
+      const url = `https://api.open-meteo.com/v1/forecast` +
+        `?latitude=39.5070&longitude=-84.7452` +
+        `&hourly=temperature_2m,precipitation_probability,weathercode,windspeed_10m,apparent_temperature` +
+        `&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=America%2FNew_York` +
+        `&start_date=${nextRound.date}&end_date=${nextRound.date}`;
+
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const data = await resp.json();
+
+      const { time: times, temperature_2m: temps, apparent_temperature: feels,
+              precipitation_probability: precips, weathercode: wcodes, windspeed_10m: winds } = data.hourly;
+
+      const SHOW_HOURS = [14, 15, 16, 17, 18, 19, 20];
+      const TEE_HOUR   = 17;
+
+      const teeIdx = times.indexOf(`${nextRound.date}T17:00`);
+      if (teeIdx === -1) throw new Error('Tee-time slot not found');
+
+      const teeInfo   = wmoInfo(wcodes[teeIdx]);
+      const teePrecip = precips[teeIdx];
+
+      let html = `
+        <div class="weather-summary">
+          <div class="ws-emoji">${teeInfo.emoji}</div>
+          <div class="ws-main">
+            <div class="ws-condition">${teeInfo.label}</div>
+            <div class="ws-details">
+              <span class="ws-detail-chip"><i class="fas fa-wind"></i>${Math.round(winds[teeIdx])} mph</span>
+              <span class="ws-detail-chip"><i class="fas fa-thermometer-half"></i>Feels ${Math.round(feels[teeIdx])}°</span>
+              <span class="ws-detail-chip" style="font-size:0.68rem;color:var(--muted);">at tee time</span>
+            </div>
+          </div>
+          <div>
+            <div class="ws-temp">${Math.round(temps[teeIdx])}°</div>
+            <div class="ws-precip-tag ${teePrecip < 20 ? 'dry' : ''}">${teePrecip < 20 ? 'Dry' : teePrecip + '% rain'}</div>
+          </div>
+        </div>
+        <div class="weather-hourly">
+          <div class="wh-header">
+            <span>Time</span><span>Conditions</span>
+            <span style="text-align:right">Temp</span>
+            <span style="text-align:right">Rain</span>
+            <span style="text-align:right">Wind</span>
+          </div>`;
+
+      for (const hr of SHOW_HOURS) {
+        const idx = times.indexOf(`${nextRound.date}T${String(hr).padStart(2,'0')}:00`);
+        if (idx === -1) continue;
+        const { label, emoji } = wmoInfo(wcodes[idx]);
+        const isTee     = hr === TEE_HOUR;
+        const precip    = precips[idx];
+        const displayHr = hr > 12 ? `${hr-12} PM` : '12 PM';
+        html += `
+          <div class="wh-row${isTee ? ' tee-time' : ''}">
+            <div class="wh-time">${displayHr}${isTee ? ' <span style="font-size:0.6rem;color:var(--gold);letter-spacing:0.06em;">TEE</span>' : ''}</div>
+            <div class="wh-icon">${emoji}</div>
+            <div class="wh-cond">${label}</div>
+            <div class="wh-temp">${Math.round(temps[idx])}°</div>
+            <div class="wh-precip ${precip >= 20 ? 'wet' : ''}">${precip >= 20 ? precip+'%' : '—'}</div>
+          </div>`;
+      }
+
+      html += `</div>
+        <div style="padding:0.4rem 1rem 0.7rem;font-size:0.66rem;color:var(--muted);text-align:right;">
+          Indian Ridge · Oxford, OH · <a href="https://open-meteo.com" target="_blank" rel="noopener" style="color:var(--muted);">Open-Meteo</a>
+        </div>`;
+
+      body.innerHTML = html;
+      updatedEl.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+    } catch (err) {
+      body.innerHTML = `<div class="weather-error"><i class="fas fa-exclamation-circle" style="color:var(--gold-muted);margin-right:0.3rem;"></i>Forecast temporarily unavailable.</div>`;
+      console.warn('Weather fetch failed:', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadWeatherForecast);
+  </script>
 </body>
 </html>
