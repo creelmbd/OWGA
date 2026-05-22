@@ -767,11 +767,12 @@
       pairs.push({ players: [withStats[lo]], type: 'oddout' });
     }
 
-    // If even players, find the pair containing Minges, Creelman, or Tracy
-    // (in that priority order) and mark it as the rotation pair.
-    // That pair gets its own solo tee-time slot — they still play as a normal
-    // 2-man scramble, just without another group sharing their tee time.
-    if (!isOdd) {
+    // Rotation solo applies only when the number of pairs is odd (e.g. 3, 5, 7, 9…
+    // pairs — which happens when attending = 6, 10, 14, 18, 22…).
+    // An odd pair count means groups of 3 pairs can't divide evenly, so one pair
+    // tees off alone. That slot rotates among Minges / Creelman / Tracy.
+    const regularPairCount = pairs.filter(p => p.type === 'regular').length;
+    if (!isOdd && regularPairCount % 2 === 1) {
       for (const rotationName of SOLO_ROTATION) {
         const idx = pairs.findIndex(
           p => p.type === 'regular' && p.players.some(pl => pl.name === rotationName)
@@ -802,9 +803,9 @@
 
   // Distribute pairs into tee-time groups.
   // - 'rotation' pair → its own middle tee-time slot (Minges/Creelman/Tracy rotation)
-  // - 'oddout' pair   → goes into a regular group alongside other pairs (plays 2 balls)
-  // - 'regular' pairs → grouped in 2s; odd leftover merges into last group
-  // Groups are randomized; rotation slot is always in the middle.
+  // - 'oddout' pair   → merged into a regular group (plays 2 balls alongside others)
+  // - 'regular' pairs → max 2 pairs per tee time (4 players); remainder spills to next group
+  // Groups are shuffled; rotation slot is always inserted in the middle.
   function assignTeeGroups(pairs) {
     const rotationPair = pairs.find(p => p.type === 'rotation') || null;
     const regularPairs = pairs.filter(p => p.type === 'regular');
@@ -817,17 +818,19 @@
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    // If there's an odd-out player, append them to the last regular pair
-    // so they ride along in a group rather than getting a lone tee slot
+    // Merge odd-out player into the last regular group so they aren't alone
     if (oddOutPair) shuffled.push(oddOutPair);
 
     const n = shuffled.length;
     const groups = [];
 
+    // Max 2 pairs per tee group (= 4 players). If the last chunk would be
+    // a lonely 1 pair, pull it into the previous group (group of 3 pairs).
     if (n > 0) {
       for (let i = 0; i < n; i += 2) {
-        // If next step would leave exactly 1 stranded, grab it now (group of 3)
-        if (i + 2 < n && n - (i + 2) === 1) {
+        const remaining = n - (i + 2);
+        if (remaining === 1) {
+          // Avoid a solo group — grab 3 pairs together and stop
           groups.push(shuffled.slice(i, i + 3));
           break;
         }

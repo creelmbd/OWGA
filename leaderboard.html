@@ -77,6 +77,11 @@
     .sc-zero   { color: var(--muted); }
     .sc-empty  { color: rgba(255,255,255,0.1); }
 
+    /* Two-line score cell: raw on top, adj below */
+    .sc-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 0.1rem; }
+    .sc-raw  { font-size: 0.68rem; color: var(--muted); line-height: 1; }
+    .sc-adj  { line-height: 1; }
+
     /* Championship panel */
     .champ-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -350,7 +355,7 @@
           <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped</div>
           <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
-          <div class="legend-item" style="color:var(--muted);font-size:0.74rem;">Scores shown are handicap-adjusted</div>
+          <div class="legend-item" style="color:var(--muted);font-size:0.74rem;">For B/C tiers: raw score shown above adj. score</div>
         </div>
 
         <div class="weekly-scroll">
@@ -725,13 +730,17 @@
             if (isBest) { cls = 'sc sc-best'; }
             else if (isDropped) { cls = 'sc sc-dropped'; }
             else { cls = 'sc sc-counted'; }
-            display = adj;
+            // Tier B/C: show raw score (muted, small) above adj score (coloured pill)
+            if (hcp > 0) {
+              cells += `<td><span class="sc-wrap"><span class="sc-raw">${raw}</span><span class="${cls} sc-adj">${adj}</span></span></td>`;
+            } else {
+              cells += `<td><span class="${cls}">${adj}</span></td>`;
+            }
           } else if (raw === 0 && w <= lastWeek) {
-            cls = 'sc sc-zero';
-            display = '—';
+            cells += `<td><span class="sc sc-zero">—</span></td>`;
+          } else {
+            cells += `<td><span class="sc sc-empty">—</span></td>`;
           }
-
-          cells += `<td><span class="${cls}">${display}</span></td>`;
         }
 
         cells += `<td><strong style="color:var(--gold-bright)">${row.avg !== null ? row.avg.toFixed(2) : '—'}</strong></td>`;
