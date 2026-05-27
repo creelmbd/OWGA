@@ -83,32 +83,34 @@
     .sc-adj  { line-height: 1; }
 
     /* Championship panel */
-    .champ-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 1rem; margin-top: 1.5rem;
+    .champ-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.88rem; margin-top: 1.5rem; }
+    .champ-table th {
+      font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gold); padding: 0.7rem 1rem;
+      text-align: left; border-bottom: 1px solid var(--border-strong);
+      background: rgba(201,168,76,0.06); white-space: nowrap;
     }
-    .champ-card {
-      background: var(--navy-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1rem 1.25rem;
-      display: flex; align-items: center; gap: 0.9rem;
-      transition: border-color 0.2s;
+    .champ-table th.c { text-align: center; }
+    .champ-table th.r { text-align: right; }
+    .champ-table td {
+      padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: var(--cream); white-space: nowrap;
     }
-    .champ-card:hover { border-color: var(--border-strong); }
-    .champ-card.p1 { border-color: rgba(201,168,76,0.5); }
-    .champ-card.p2 { border-color: rgba(160,160,160,0.35); }
-    .champ-card.p3 { border-color: rgba(160,100,60,0.4); }
-    .place-circle {
-      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      font-family: var(--serif-display); font-size: 0.95rem; font-weight: 700;
+    .champ-table td.c { text-align: center; }
+    .champ-table td.r { text-align: right; }
+    .champ-table tr:hover td { background: rgba(255,255,255,0.025); }
+    .champ-table tr.p1 td { background: rgba(201,168,76,0.05); }
+    .champ-table tr.p2 td { background: rgba(180,180,180,0.03); }
+    .champ-table tr.p3 td { background: rgba(160,100,60,0.04); }
+    .champ-place { font-family: var(--serif-display); font-size: 1.05rem; color: var(--gold-pale); font-weight: 700; }
+    .champ-place.top { color: var(--gold-bright); }
+    .champ-total { font-family: var(--serif-display); font-size: 1.15rem; color: var(--gold-bright); font-weight: 700; }
+    .champ-nine { color: var(--muted); font-size: 0.82rem; }
+    .champ-format-note {
+      font-size: 0.78rem; color: var(--muted); margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 0.5rem;
     }
-    .place-circle.p1 { background: rgba(201,168,76,0.12); color: var(--gold-bright); border: 1px solid var(--gold-muted); }
-    .place-circle.p2 { background: rgba(180,180,180,0.08); color: #b0b0b0; border: 1px solid #555; }
-    .place-circle.p3 { background: rgba(160,100,60,0.1); color: #c07848; border: 1px solid #6a4020; }
-    .place-circle.pn { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
-    .champ-info .champ-player { font-weight: 500; color: var(--white); font-size: 0.9rem; }
-    .champ-info .champ-score { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
-    .champ-info .champ-score span { color: var(--gold); font-weight: 600; }
+    .champ-format-note i { color: var(--gold-muted); }
 
     /* Admin panel */
     .admin-gate {
@@ -200,12 +202,12 @@
       margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);
     }
     .champ-editor-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 0.75rem;
+      display: grid; grid-template-columns: 1fr; gap: 0.5rem;
     }
     .champ-row {
       background: var(--navy-card); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 0.75rem 1rem;
-      display: grid; grid-template-columns: 48px 1fr 80px 80px; align-items: center; gap: 0.5rem;
+      border-radius: var(--radius); padding: 0.65rem 1rem;
+      display: grid; grid-template-columns: 40px 1fr 1fr 70px 70px; align-items: center; gap: 0.5rem;
     }
     .champ-row .place-lbl { font-family: var(--serif-display); color: var(--gold-pale); font-size: 0.95rem; text-align: center; }
     .champ-row input {
@@ -385,9 +387,9 @@
             </div>
           </div>
           <div class="tier-players-grid">
-            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span></div>
           </div>
         </div>
 
@@ -438,9 +440,13 @@
       <!-- CHAMPIONSHIP -->
       <div id="panel-championship" class="lb-panel">
         <div style="margin-bottom:1.5rem;">
-          <span class="section-label">Championship Day</span>
+          <span class="section-label">Championship Day — August 22</span>
           <h2>Final Results</h2>
         </div>
+        <p class="champ-format-note">
+          <i class="fas fa-info-circle"></i>
+          18-hole scramble · Partners switch at the turn · No handicaps · Ranked by individual 18-hole total
+        </p>
         <div id="champ-content"></div>
       </div>
 
@@ -492,6 +498,13 @@
           <!-- Championship editor -->
           <div class="champ-editor">
             <h4>Championship Day Results</h4>
+            <div style="display:grid;grid-template-columns:40px 1fr 1fr 70px 70px;gap:0.5rem;padding:0 1rem 0.5rem;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">
+              <span style="text-align:center;">#</span>
+              <span>Player</span>
+              <span>Partner swap note</span>
+              <span style="text-align:center;">Front 9</span>
+              <span style="text-align:center;">Back 9</span>
+            </div>
             <div class="champ-editor-grid" id="champ-editor-grid"></div>
             <div style="margin-top:1rem;display:flex;gap:0.75rem;align-items:center;">
               <button class="btn-gold" onclick="saveChampionship()">Save Championship</button>
@@ -499,7 +512,7 @@
             </div>
             <p class="admin-note" style="margin-top:0.75rem;">
               <i class="fas fa-info-circle"></i>
-              Enter player name, front 9, and back 9 for each finishing position. Total is calculated automatically.
+              Enter each player's name, an optional note about their partner pairing, and their front 9 and back 9 scores. Rows are sorted by total automatically on the public view. No handicaps applied on championship day.
             </p>
           </div>
 
@@ -577,42 +590,22 @@
     }
 
     // ── DATA ───────────────────────────────────────────────────────
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
-
-    let _scoresCache = null;
-    let _champCache  = null;
-
-    async function fetchScores() {
-      if (_scoresCache) return _scoresCache;
-      try {
-        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getScores`);
-        const json = await res.json();
-        _scoresCache = json.scores || {};
-      } catch(e) {
-        console.error('Could not load scores:', e);
-        _scoresCache = {};
-      }
-      return _scoresCache;
-    }
-
     function loadData() {
-      return _scoresCache || {};
+      try { return JSON.parse(localStorage.getItem('owga_scores_' + SEASON_YEAR) || '{}'); }
+      catch(e) { return {}; }
     }
 
-    async function fetchChampData() {
-      if (_champCache) return _champCache;
-      try {
-        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getChampionship`);
-        const json = await res.json();
-        _champCache = json.results || [];
-      } catch(e) {
-        _champCache = [];
-      }
-      return _champCache;
+    function saveData(data) {
+      localStorage.setItem('owga_scores_' + SEASON_YEAR, JSON.stringify(data));
     }
 
     function loadChampData() {
-      return _champCache || [];
+      try { return JSON.parse(localStorage.getItem('owga_champ_' + SEASON_YEAR) || '[]'); }
+      catch(e) { return []; }
+    }
+
+    function saveChampData(data) {
+      localStorage.setItem('owga_champ_' + SEASON_YEAR, JSON.stringify(data));
     }
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
@@ -640,8 +633,7 @@
     }
 
     // ── RENDER STANDINGS ───────────────────────────────────────────
-    async function renderStandings() {
-      await fetchScores();
+    function renderStandings() {
       const data = loadData();
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
@@ -705,8 +697,7 @@
     }
 
     // ── RENDER WEEKLY TABLE ────────────────────────────────────────
-    async function renderWeekly() {
-      await fetchScores();
+    function renderWeekly() {
       const data = loadData();
 
       // Find last week with any data
@@ -785,12 +776,12 @@
     }
 
     // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
-    async function renderChampionship() {
-      await fetchChampData();
+    function renderChampionship() {
       const champ = loadChampData();
       const container = document.getElementById('champ-content');
 
-      if (champ.length === 0 || champ.every(c => !c.name)) {
+      const hasData = champ.length > 0 && champ.some(c => c.name);
+      if (!hasData) {
         container.innerHTML = `
           <div style="text-align:center;padding:4rem 0;color:var(--muted);">
             <i class="fas fa-trophy" style="font-size:2.5rem;color:var(--border-strong);display:block;margin-bottom:1rem;"></i>
@@ -800,30 +791,73 @@
         return;
       }
 
-      const pClass = (i) => i === 0 ? 'p1' : i === 1 ? 'p2' : i === 2 ? 'p3' : 'pn';
-      const grid = document.createElement('div');
-      grid.className = 'champ-grid';
+      // Build rows with totals, filter blanks, sort by total ascending
+      const rows = champ
+        .filter(e => e.name)
+        .map(e => ({
+          name:  e.name,
+          note:  e.note || '',
+          front: parseInt(e.front) || 0,
+          back:  parseInt(e.back)  || 0,
+          total: (parseInt(e.front) || 0) + (parseInt(e.back) || 0)
+        }))
+        .sort((a, b) => {
+          // Players with no scores yet go to bottom
+          if (!a.total && !b.total) return 0;
+          if (!a.total) return 1;
+          if (!b.total) return -1;
+          return a.total - b.total;
+        });
 
-      champ.forEach((entry, i) => {
-        if (!entry.name) return;
-        const total = (parseInt(entry.front) || 0) + (parseInt(entry.back) || 0);
-        const card = document.createElement('div');
-        card.className = `champ-card ${pClass(i)}`;
-        card.innerHTML = `
-          <div class="place-circle ${pClass(i)}">${i + 1}</div>
-          <div class="champ-info">
-            <div class="champ-player">${entry.name}</div>
-            <div class="champ-score">
-              Front: <span>${entry.front || '—'}</span> &nbsp;
-              Back: <span>${entry.back || '—'}</span> &nbsp;
-              Total: <span>${total || '—'}</span>
-            </div>
-          </div>`;
-        grid.appendChild(card);
+      // Handle ties for rank display
+      let rank = 1;
+      const ranked = [];
+      rows.forEach((row, i) => {
+        let displayRank;
+        if (i > 0 && row.total === rows[i-1].total && row.total > 0) {
+          displayRank = ranked[i-1].rank;
+        } else {
+          displayRank = rank;
+        }
+        rank = i + 2;
+        ranked.push({ ...row, rank: displayRank });
       });
 
+      const placeClass = (r) => r === 1 ? 'p1' : r === 2 ? 'p2' : r === 3 ? 'p3' : '';
+      const placeNumClass = (r) => r <= 3 ? 'champ-place top' : 'champ-place';
+
+      const table = document.createElement('table');
+      table.className = 'champ-table';
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th class="c" style="width:52px;">Place</th>
+            <th>Player</th>
+            <th class="c">Front 9</th>
+            <th class="c">Back 9</th>
+            <th class="r">Total</th>
+          </tr>
+        </thead>`;
+
+      const tbody = document.createElement('tbody');
+      ranked.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = placeClass(row.rank);
+        const frontDisplay = row.front || '—';
+        const backDisplay  = row.back  || '—';
+        const totalDisplay = row.total || '—';
+        tr.innerHTML = `
+          <td class="c"><span class="${placeNumClass(row.rank)}">${row.rank}</span></td>
+          <td style="font-weight:500;color:var(--white);">${row.name}${row.note ? `<span style="font-size:0.75rem;color:var(--muted);margin-left:0.5rem;font-weight:400;">${row.note}</span>` : ''}</td>
+          <td class="c"><span class="champ-nine">${frontDisplay}</span></td>
+          <td class="c"><span class="champ-nine">${backDisplay}</span></td>
+          <td class="r"><span class="champ-total">${totalDisplay}</span></td>`;
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
       container.innerHTML = '';
-      container.appendChild(grid);
+      container.appendChild(table);
     }
 
     // ── TABS ───────────────────────────────────────────────────────
@@ -837,16 +871,11 @@
     }
 
     // ── ADMIN ──────────────────────────────────────────────────────
-    async function adminLogin() {
+    function adminLogin() {
       const pw = document.getElementById('admin-pw').value;
       if (pw === ADMIN_PASSWORD) {
         document.getElementById('admin-gate').style.display = 'none';
         document.getElementById('admin-editor').style.display = 'block';
-        // Force fresh fetch so editor always shows current sheet data
-        _scoresCache = null;
-        _champCache  = null;
-        await fetchScores();
-        await fetchChampData();
         buildWeekSelector();
         buildScoreEditor();
         buildChampEditor();
@@ -903,61 +932,32 @@
       loadWeekScores();
     }
 
-    async function saveScores() {
-      const week   = parseInt(document.getElementById('week-select').value);
+    function saveScores() {
+      const week = parseInt(document.getElementById('week-select').value);
+      const data = loadData();
       const inputs = document.querySelectorAll('#score-editor-grid input');
-      const scores = {};
 
       inputs.forEach(input => {
+        const name = input.dataset.player;
+        if (!data[name]) data[name] = {};
         const val = parseInt(input.value);
-        scores[input.dataset.player] = isNaN(val) ? 0 : val;
+        data[name][week] = isNaN(val) ? 0 : val;
       });
 
-      // Update cache immediately so standings refresh without waiting
-      if (!_scoresCache) _scoresCache = {};
-      Object.entries(scores).forEach(([name, val]) => {
-        if (!_scoresCache[name]) _scoresCache[name] = {};
-        if (val > 0) _scoresCache[name][week] = val;
-        else delete _scoresCache[name][week];
-      });
-
+      saveData(data);
       renderStandings();
-
-      try {
-        const res  = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveWeek', week, scores })
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-      } catch(e) {
-        alert('Save failed: ' + e.message);
-        return;
-      }
 
       const flash = document.getElementById('saved-flash');
       flash.classList.add('show');
       setTimeout(() => flash.classList.remove('show'), 2000);
     }
 
-    async function clearWeek() {
+    function clearWeek() {
       if (!confirm('Clear all scores for this week?')) return;
       const week = parseInt(document.getElementById('week-select').value);
-
-      if (_scoresCache) {
-        PLAYERS.forEach(name => { if (_scoresCache[name]) delete _scoresCache[name][week]; });
-      }
-
-      try {
-        await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'clearWeek', week })
-        });
-      } catch(e) {
-        alert('Clear failed: ' + e.message);
-        return;
-      }
-
+      const data = loadData();
+      PLAYERS.forEach(name => { if (data[name]) data[name][week] = 0; });
+      saveData(data);
       loadWeekScores();
       renderStandings();
     }
@@ -968,46 +968,41 @@
       const grid = document.getElementById('champ-editor-grid');
       grid.innerHTML = '';
 
-      for (let i = 0; i < 15; i++) {
-        const entry = champ[i] || {};
+      // Always show all 22 players (full roster), pre-fill if data exists
+      const entries = {};
+      champ.forEach((e, i) => { if (e.name) entries[e.name] = e; });
+
+      PLAYERS.forEach((name, i) => {
+        const entry = entries[name] || {};
         const row = document.createElement('div');
         row.className = 'champ-row';
         row.innerHTML = `
-          <span class="place-lbl">${i + 1}</span>
-          <input type="text" placeholder="Player name" value="${entry.name || ''}" data-ci="${i}" data-field="name">
-          <input type="number" min="0" max="60" placeholder="Front 9" value="${entry.front || ''}" class="score-in" data-ci="${i}" data-field="front">
-          <input type="number" min="0" max="60" placeholder="Back 9" value="${entry.back || ''}" class="score-in" data-ci="${i}" data-field="back">
+          <span class="place-lbl" style="font-family:var(--serif-display);color:var(--gold-pale);font-size:0.85rem;text-align:center;">${i + 1}</span>
+          <input type="text" placeholder="Player name" value="${entry.name || name}" data-ci="${i}" data-field="name"
+            style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;color:var(--cream);font-family:var(--sans);font-size:0.82rem;outline:none;">
+          <input type="text" placeholder="e.g. w/ Brad F9" value="${entry.note || ''}" data-ci="${i}" data-field="note"
+            style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;color:var(--muted);font-family:var(--sans);font-size:0.78rem;outline:none;">
+          <input type="number" min="0" max="40" placeholder="F9" value="${entry.front || ''}" class="score-in" data-ci="${i}" data-field="front"
+            style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;text-align:center;color:var(--gold-pale);font-family:var(--sans);font-size:0.9rem;font-weight:600;outline:none;">
+          <input type="number" min="0" max="40" placeholder="B9" value="${entry.back || ''}" class="score-in" data-ci="${i}" data-field="back"
+            style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;text-align:center;color:var(--gold-pale);font-family:var(--sans);font-size:0.9rem;font-weight:600;outline:none;">
         `;
         grid.appendChild(row);
-      }
+      });
     }
 
-    async function saveChampionship() {
-      const inputs  = document.querySelectorAll('#champ-editor-grid input');
+    function saveChampionship() {
+      const inputs = document.querySelectorAll('#champ-editor-grid input');
       const entries = {};
       inputs.forEach(input => {
         const i = input.dataset.ci;
         if (!entries[i]) entries[i] = {};
-        entries[i][input.dataset.field] = input.value;
+        entries[i][input.dataset.field] = input.value.trim();
       });
 
       const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
-
-      // Update cache optimistically
-      _champCache = arr;
+      saveChampData(arr);
       renderChampionship();
-
-      try {
-        const res  = await fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveChampionship', results: arr })
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-      } catch(e) {
-        alert('Save failed: ' + e.message);
-        return;
-      }
 
       const flash = document.getElementById('champ-saved-flash');
       flash.classList.add('show');
