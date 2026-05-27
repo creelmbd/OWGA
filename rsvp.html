@@ -757,41 +757,66 @@
   }
 
   // ── Pairing algorithm ──────────────────────────────────────────
-  // Sort attending players: best adj avg first (2dp), then season rank.
-  // No scores yet → season rank only. Then pair #1 with last, #2 with 2nd-last.
-  function getPlayerAvg(name) {
+  // Scores fetched from the same Apps Script as the leaderboard page.
+  // calcPlayerAdjAvg mirrors calcPlayer() in leaderboard.html exactly:
+  //   raw scores → apply tier hcp → best BEST_N → average.
+  // Unscored players use tier placeholder (A=36, B=38, C=40) for sorting,
+  // shown as #seasonRank in the display (matching leaderboard grey values).
+  // Sort: adj avg asc, season rank as tiebreaker. Pair #1 with #N, #2 with #N-1.
+
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
+  const BEST_N   = 6;
+  const TIER_PH  = { A: 36, B: 38, C: 40 };
+  let   _scoresCache = null;
+
+  async function fetchScores() {
+    if (_scoresCache) return _scoresCache;
     try {
-      const data = JSON.parse(localStorage.getItem('owga_scores_2026') || '{}');
-      const BEST_N = 6;
-      const hcp = TIER_MAP[name] === 'B' ? 1 : TIER_MAP[name] === 'C' ? 2 : 0;
-      const scores = Object.values(data[name] || {})
-        .map(s => parseInt(s))
-        .filter(s => s > 0)
-        .map(s => s - hcp)
-        .sort((a, b) => a - b)
-        .slice(0, BEST_N);
-      if (scores.length === 0) return null;
-      return scores.reduce((a, b) => a + b, 0) / scores.length;
-    } catch (e) { return null; }
+      const res  = await fetch(`${APPS_SCRIPT_URL}?action=getScores`);
+      const json = await res.json();
+      _scoresCache = json.scores || {};
+    } catch(e) {
+      console.error('Could not load scores:', e);
+      _scoresCache = {};
+    }
+    return _scoresCache;
   }
 
-  function buildPairings(attending) {
-    const withStats = attending.map(name => ({
-      name,
-      avg: getPlayerAvg(name),
-      seasonRank: SEASON_RANK[name] ?? 99
-    }));
+  function getTierHcp(name) {
+    const t = TIER_MAP[name] || 'A';
+    return t === 'B' ? 1 : t === 'C' ? 2 : 0;
+  }
 
-    // Sort: adj avg (2dp) asc, then season rank asc; no scores → season rank only
+  function calcPlayerAdjAvg(name, data) {
+    const hcp     = getTierHcp(name);
+    const rawObj  = data[name] || {};
+    // rawObj keys are week indices (0–13); values are raw scores
+    const attended = Object.values(rawObj)
+      .map(s => parseInt(s))
+      .filter(s => s > 0)
+      .map(s => s - hcp)
+      .sort((a, b) => a - b)
+      .slice(0, BEST_N);
+    if (attended.length === 0) return null;
+    return attended.reduce((a, b) => a + b, 0) / attended.length;
+  }
+
+  function buildPairings(attending, scoresData) {
+    const withStats = attending.map(name => {
+      const avg = calcPlayerAdjAvg(name, scoresData);
+      const ph  = TIER_PH[TIER_MAP[name]] ?? 38;
+      return {
+        name,
+        avg,                                    // null if no scores yet
+        sortAvg: avg !== null ? avg : ph,       // continuous sort scale
+        seasonRank: SEASON_RANK[name] ?? 99
+      };
+    });
+
+    // Sort to match leaderboard rank: adj avg asc, season rank as tiebreaker
     withStats.sort((a, b) => {
-      if (a.avg !== null && b.avg !== null) {
-        const aDp = Math.round(a.avg * 100);
-        const bDp = Math.round(b.avg * 100);
-        if (aDp !== bDp) return aDp - bDp;
-        return a.seasonRank - b.seasonRank;
-      }
-      if (a.avg !== null) return -1;
-      if (b.avg !== null) return 1;
+      const diff = Math.round(a.sortAvg * 100) - Math.round(b.sortAvg * 100);
+      if (diff !== 0) return diff;
       return a.seasonRank - b.seasonRank;
     });
 
@@ -844,41 +869,38 @@
   // Distribute pairs into tee-time groups.
   // - 'rotation' pair → its own middle tee-time slot (Minges/Creelman/Tracy rotation)
   // - 'oddout' pair   → merged into a regular group (plays 2 balls alongside others)
-  // - 'regular' pairs → max 2 pairs per tee time (4 players); remainder spills to next group
-  // Groups are shuffled; rotation slot is always inserted in the middle.
+  // - 'regular' pairs → max 2 pairs per tee time (4 players)
+  //
+  // Tee order is rank-based (deterministic, no shuffle):
+  //   pairs[0] = best vs worst; reversed so middle pairs tee FIRST, top pair tees LAST.
   function assignTeeGroups(pairs) {
     const rotationPair = pairs.find(p => p.type === 'rotation') || null;
     const regularPairs = pairs.filter(p => p.type === 'regular');
     const oddOutPair   = pairs.find(p => p.type === 'oddout') || null;
 
-    // Shuffle regular pairs
-    const shuffled = [...regularPairs];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
+    // Reverse: middle pairs first, #1-vs-last pairing goes last
+    const ordered = [...regularPairs].reverse();
 
-    // Merge odd-out player into the last regular group so they aren't alone
-    if (oddOutPair) shuffled.push(oddOutPair);
+    // Merge odd-out player into the last group so they aren't alone
+    if (oddOutPair) ordered.push(oddOutPair);
 
-    const n = shuffled.length;
+    const n = ordered.length;
     const groups = [];
 
     // Max 2 pairs per tee group (= 4 players). If the last chunk would be
-    // a lonely 1 pair, pull it into the previous group (group of 3 pairs).
+    // a lonely 1 pair, absorb it into the previous group (group of 3 pairs).
     if (n > 0) {
       for (let i = 0; i < n; i += 2) {
         const remaining = n - (i + 2);
         if (remaining === 1) {
-          // Avoid a solo group — grab 3 pairs together and stop
-          groups.push(shuffled.slice(i, i + 3));
+          groups.push(ordered.slice(i, i + 3));
           break;
         }
-        groups.push(shuffled.slice(i, i + 2));
+        groups.push(ordered.slice(i, i + 2));
       }
     }
 
-    // Insert rotation solo into the middle
+    // Insert rotation solo into the middle tee slot
     if (rotationPair) {
       const insertAt = Math.ceil(groups.length / 2);
       groups.splice(insertAt, 0, [rotationPair]);
@@ -888,7 +910,7 @@
   }
 
   // ── Render pairings ────────────────────────────────────────────
-  function renderPairings(playerRows, roundCols) {
+  async function renderPairings(playerRows, roundCols) {
     const wrap = document.getElementById('pairings-wrap');
 
     // Find next upcoming round index
@@ -913,7 +935,8 @@
       else attending.push(name);
     });
 
-    const pairs  = buildPairings(attending);
+    const scoresData = await fetchScores();
+    const pairs  = buildPairings(attending, scoresData);
     const groups = assignTeeGroups(pairs);
     const isOdd  = attending.length % 2 === 1;
 
