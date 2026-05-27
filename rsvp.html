@@ -6,6 +6,7 @@
   <title>OWGA Golf League - RSVP</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="scripts.js" defer></script>
   <style>
     .rsvp-wrap {
@@ -443,11 +444,10 @@
     }
     .pairings-loading i { display: block; font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--border-strong); }
 
-    /* ── Tee time groups ── */
     .tee-groups {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1rem;
       margin-bottom: 2rem;
     }
     .tee-group {
@@ -460,26 +460,26 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 0.7rem 1.1rem;
+      padding: 0.6rem 1rem;
       background: rgba(201,168,76,0.06);
       border-bottom: 1px solid var(--border);
     }
     .tee-time-badge {
       font-family: var(--serif-display);
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       color: var(--gold-bright);
       letter-spacing: 0.04em;
       flex-shrink: 0;
     }
     .tee-group-divider {
       width: 1px;
-      height: 20px;
+      height: 18px;
       background: var(--border-strong);
       flex-shrink: 0;
     }
     .tee-group-label {
       font-family: var(--sans);
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 600;
       letter-spacing: 0.14em;
       text-transform: uppercase;
@@ -487,19 +487,22 @@
     }
     .tee-group-count {
       margin-left: auto;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: var(--muted);
     }
+    /* Always 2 columns on desktop — no wasted space */
     .tee-group-pairs {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: 1fr 1fr;
     }
     .tee-pair {
-      padding: 0.75rem 1.1rem;
+      padding: 0.7rem 1rem;
       border-right: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
     }
-    .tee-pair:last-child { border-right: none; }
+    .tee-pair:nth-child(even) { border-right: none; }
+    .tee-pair:last-child { border-bottom: none; }
+    .tee-pair:nth-last-child(2):nth-child(odd) { border-bottom: none; }
     .tee-pair-label {
       font-family: var(--sans);
       font-size: 0.62rem;
@@ -507,66 +510,103 @@
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.45rem;
     }
     .tee-pair.solo-pair { border-color: rgba(230,160,20,0.2); }
     .tee-pair.solo-pair .tee-pair-label { color: #e8b84a; }
     .tee-pair-players {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.3rem;
     }
     .tee-player {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
+      gap: 0.5rem;
+      min-width: 0; /* prevent overflow */
     }
     .tp-stat {
       font-family: var(--serif-display);
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--gold-muted);
-      min-width: 38px;
+      min-width: 36px;
       flex-shrink: 0;
     }
     .tp-name {
-      font-size: 0.86rem;
+      font-size: 0.84rem;
       font-weight: 500;
       color: var(--white);
       flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .tp-tier {
       font-family: var(--sans);
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       font-weight: 700;
       letter-spacing: 0.08em;
-      padding: 0.1rem 0.3rem;
+      padding: 0.1rem 0.28rem;
       border-radius: 2px;
       flex-shrink: 0;
+      margin-left: auto;
     }
     .tp-tier.ta { background: rgba(201,168,76,0.15); color: var(--gold-bright); border: 1px solid rgba(201,168,76,0.3); }
     .tp-tier.tb { background: rgba(180,180,180,0.1); color: #b0b0b0; border: 1px solid rgba(180,180,180,0.25); }
     .tp-tier.tc { background: rgba(160,100,60,0.12); color: #c07848; border: 1px solid rgba(160,100,60,0.3); }
     .tp-vs {
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       color: rgba(255,255,255,0.15);
-      padding-left: 44px;
+      padding-left: 42px;
       letter-spacing: 0.06em;
     }
     .solo-note {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #e8b84a;
-      margin-top: 0.35rem;
-      padding-left: 44px;
+      margin-top: 0.3rem;
+      padding-left: 42px;
     }
     .solo-rotation-note {
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       color: var(--muted);
-      margin-top: 0.5rem;
-      padding-top: 0.4rem;
+      margin-top: 0.4rem;
+      padding-top: 0.35rem;
       border-top: 1px solid rgba(255,255,255,0.05);
       line-height: 1.4;
     }
     .solo-rotation-note strong { color: #e8c060; }
+
+    /* Copy snapshot button */
+    .btn-snapshot-pairings {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--gold-muted);
+      padding: 0.35rem 0.8rem;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+    .btn-snapshot-pairings:hover { background: var(--gold-glow); color: var(--gold); }
+    .btn-snapshot-pairings.copied { color: #72d48a; border-color: rgba(114,212,138,0.4); }
+    .btn-snapshot-pairings:disabled { opacity: 0.5; cursor: wait; }
+
+    /* Mobile */
+    @media (max-width: 600px) {
+      .tee-group-pairs { grid-template-columns: 1fr; }
+      .tee-pair { border-right: none; }
+      .tee-pair:last-child { border-bottom: none; }
+      .tee-pair:nth-last-child(2):nth-child(odd) { border-bottom: 1px solid var(--border); }
+      .tp-name { white-space: normal; } /* allow wrap on very small screens */
+    }
   </style>
 </head>
 <body>
@@ -884,14 +924,19 @@
           <span class="section-label">Upcoming Round</span>
           <h2>${roundLabel} — Tee Times &amp; Pairings</h2>
         </div>
-        <span class="pairings-round-tag">${roundDate} &bull; First tee 5:09 PM</span>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <span class="pairings-round-tag">${roundDate} &bull; First tee 5:09 PM</span>
+          <button class="btn-snapshot-pairings" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
+            <i class="fas fa-camera"></i> Copy
+          </button>
+        </div>
       </div>
       <p class="pairings-note">
         <i class="fas fa-info-circle"></i>
         Paired best-to-worst by adj. avg then season rank. Groups randomized.
         Blank RSVP counts as attending.${isOdd ? ' <strong style="color:#e8b84a;">Odd number attending — solo player plays 2 balls.</strong>' : ''}
       </p>
-      <div class="tee-groups">`;
+      <div class="tee-groups" id="tee-groups-capture">`;
 
     groups.forEach((groupPairs, gi) => {
       const teeTime = teeTimeStr(gi);
@@ -1080,6 +1125,59 @@
   }
 
   document.addEventListener('DOMContentLoaded', loadRSVP);
+
+  // ── Snapshot ────────────────────────────────────────────────────
+  async function copyPairingsSnapshot() {
+    const btn = document.getElementById('pairings-snapshot-btn');
+    if (!btn) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    // Capture just the tee groups grid, not the attending list
+    const target = document.getElementById('tee-groups-capture');
+    if (!target) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+      return;
+    }
+
+    try {
+      const canvas = await html2canvas(target, {
+        backgroundColor: '#0b1120',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+
+      try {
+        canvas.toBlob(async blob => {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+            btn.classList.remove('copied');
+          }, 2500);
+        }, 'image/png');
+      } catch(clipErr) {
+        // Fallback: download
+        const link = document.createElement('a');
+        link.download = `owga-pairings-${new Date().toISOString().slice(0,10)}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+      }
+    } catch(err) {
+      console.error('Snapshot failed:', err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+      alert('Snapshot failed — try again.');
+    }
+  }
   </script>
 </body>
 </html>

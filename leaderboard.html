@@ -608,9 +608,7 @@
       return _scoresCache;
     }
 
-    function loadData() {
-      return _scoresCache || {};
-    }
+    function loadData() { return _scoresCache || {}; }
 
     async function fetchChampData() {
       if (_champCache) return _champCache;
@@ -624,13 +622,9 @@
       return _champCache;
     }
 
-    function loadChampData() {
-      return _champCache || [];
-    }
+    function loadChampData() { return _champCache || []; }
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
-    // Returns { counted: [], dropped: [], avg, total, played, bestScore }
-    // rawScores = entered scores; adjusted scores used for ranking
     function calcPlayer(name, rawScores) {
       const hcp = getTierHandicap(name);
       const attended = rawScores
@@ -642,10 +636,8 @@
       const sorted = [...attended].sort((a, b) => a.score - b.score);
       const countedWeeks = new Set(sorted.slice(0, BEST_N).map(x => x.week));
       const best = sorted[0];
-
       const counted = attended.filter(x => countedWeeks.has(x.week));
       const dropped = attended.filter(x => !countedWeeks.has(x.week));
-
       const total = counted.reduce((s, x) => s + x.score, 0);
       const avg = counted.length > 0 ? (total / counted.length) : null;
 
@@ -662,7 +654,6 @@
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), ...calc };
       });
 
-      // Sort: players with 2026 scores → by adj avg; unplayed → by prior season avg then season rank
       rows.sort((a, b) => {
         const aAvg = a.avg !== null ? a.avg : (a.priorAvg !== null ? a.priorAvg + 1000 : 9999);
         const bAvg = b.avg !== null ? b.avg : (b.priorAvg !== null ? b.priorAvg + 1000 : 9999);
@@ -674,22 +665,18 @@
 
       const tbody = document.getElementById('standings-tbody');
       tbody.innerHTML = '';
-
       let rank = 1;
       rows.forEach((row, i) => {
         const tr = document.createElement('tr');
         const isTop = rank <= 3 && row.avg !== null;
-
         if (i > 0 && row.avg !== null && rows[i-1].avg !== null && row.avg === rows[i-1].avg) {
-          // same rank as previous (tied avg — season rank broke display order but rank number stays tied)
+          // tied
         } else if (row.avg !== null) {
           rank = i + 1;
         }
-
-        const displayRank = row.avg !== null ? rank : '—';
+        const displayRank = row.avg !== null ? rank : '\u2014';
         const rankClass = isTop ? 'rank-num top' : 'rank-num';
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
-
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
           <td class="player-name-cell">${row.name}</td>
@@ -700,16 +687,15 @@
               ? `<span class="avg-val">${row.avg.toFixed(2)}</span>`
               : row.priorAvg !== null
                 ? `<span class="stat-muted" title="Tier seed average">${row.priorAvg.toFixed(0)}</span>`
-                : `<span class="stat-muted">—</span>`}
+                : `<span class="stat-muted">\u2014</span>`}
           </td>
-          <td class="r stat-muted hide-mobile">${row.total || '—'}</td>
-          <td class="c stat-muted">${row.played || '—'}</td>
-          <td class="c stat-muted hide-mobile">${row.dropped.length || '—'}</td>
+          <td class="r stat-muted hide-mobile">${row.total || '\u2014'}</td>
+          <td class="c stat-muted">${row.played || '\u2014'}</td>
+          <td class="c stat-muted hide-mobile">${row.dropped.length || '\u2014'}</td>
         `;
         tbody.appendChild(tr);
       });
 
-      // Update rounds played label
       const weeksWithData = Array.from({ length: TOTAL_WEEKS }, (_, i) =>
         PLAYERS.some(p => (data[p]?.[i] ?? 0) > 0)
       ).filter(Boolean).length;
@@ -722,13 +708,11 @@
       await fetchScores();
       const data = loadData();
 
-      // Find last week with any data
       let lastWeek = -1;
       for (let w = TOTAL_WEEKS - 1; w >= 0; w--) {
         if (PLAYERS.some(p => (data[p]?.[w] ?? 0) > 0)) { lastWeek = w; break; }
       }
 
-      // Build header
       const thead = document.getElementById('weekly-thead');
       let headerHTML = '<tr><th class="left">Player</th><th class="left" style="padding-left:0.4rem;">Tier</th>';
       for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
@@ -737,7 +721,6 @@
       headerHTML += '<th>Adj. Avg</th><th>Played</th></tr>';
       thead.innerHTML = headerHTML;
 
-      // Sort players same as standings
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
         const calc = calcPlayer(name, scores);
@@ -764,29 +747,26 @@
           const raw = row.scores[w];
           const adj = raw > 0 ? raw - hcp : 0;
           let cls = 'sc sc-empty';
-          let display = '—';
-
           if (raw > 0) {
             const isBest = row.bestWeek === w;
             const isDropped = row.dropped.some(d => d.week === w);
-            if (isBest) { cls = 'sc sc-best'; }
-            else if (isDropped) { cls = 'sc sc-dropped'; }
-            else { cls = 'sc sc-counted'; }
-            // Tier B/C: show raw score (muted, small) above adj score (coloured pill)
+            if (isBest) cls = 'sc sc-best';
+            else if (isDropped) cls = 'sc sc-dropped';
+            else cls = 'sc sc-counted';
             if (hcp > 0) {
               cells += `<td><span class="sc-wrap"><span class="sc-raw">${raw}</span><span class="${cls} sc-adj">${adj}</span></span></td>`;
             } else {
               cells += `<td><span class="${cls}">${adj}</span></td>`;
             }
           } else if (raw === 0 && w <= lastWeek) {
-            cells += `<td><span class="sc sc-zero">—</span></td>`;
+            cells += `<td><span class="sc sc-zero">\u2014</span></td>`;
           } else {
-            cells += `<td><span class="sc sc-empty">—</span></td>`;
+            cells += `<td><span class="sc sc-empty">\u2014</span></td>`;
           }
         }
 
-        cells += `<td><strong style="color:var(--gold-bright)">${row.avg !== null ? row.avg.toFixed(2) : '—'}</strong></td>`;
-        cells += `<td style="color:var(--muted)">${row.played || '—'}</td>`;
+        cells += `<td><strong style="color:var(--gold-bright)">${row.avg !== null ? row.avg.toFixed(2) : '\u2014'}</strong></td>`;
+        cells += `<td style="color:var(--muted)">${row.played || '\u2014'}</td>`;
         tr.innerHTML = cells;
         tbody.appendChild(tr);
       });
@@ -803,8 +783,7 @@
       const champ = loadChampData();
       const container = document.getElementById('champ-content');
 
-      const hasData = champ.length > 0 && champ.some(c => c.name);
-      if (!hasData) {
+      if (!champ.length || !champ.some(c => c.name)) {
         container.innerHTML = `
           <div style="text-align:center;padding:4rem 0;color:var(--muted);">
             <i class="fas fa-trophy" style="font-size:2.5rem;color:var(--border-strong);display:block;margin-bottom:1rem;"></i>
@@ -814,70 +793,51 @@
         return;
       }
 
-      // Build rows with totals, filter blanks, sort by total ascending
       const rows = champ
         .filter(e => e.name)
         .map(e => ({
-          name:  e.name,
-          note:  e.note || '',
+          name: e.name, note: e.note || '',
           front: parseInt(e.front) || 0,
           back:  parseInt(e.back)  || 0,
           total: (parseInt(e.front) || 0) + (parseInt(e.back) || 0)
         }))
         .sort((a, b) => {
-          // Players with no scores yet go to bottom
           if (!a.total && !b.total) return 0;
           if (!a.total) return 1;
           if (!b.total) return -1;
           return a.total - b.total;
         });
 
-      // Handle ties for rank display
       let rank = 1;
       const ranked = [];
       rows.forEach((row, i) => {
-        let displayRank;
-        if (i > 0 && row.total === rows[i-1].total && row.total > 0) {
-          displayRank = ranked[i-1].rank;
-        } else {
-          displayRank = rank;
-        }
+        const displayRank = (i > 0 && row.total === rows[i-1].total && row.total > 0) ? ranked[i-1].rank : rank;
         rank = i + 2;
         ranked.push({ ...row, rank: displayRank });
       });
 
-      const placeClass = (r) => r === 1 ? 'p1' : r === 2 ? 'p2' : r === 3 ? 'p3' : '';
-      const placeNumClass = (r) => r <= 3 ? 'champ-place top' : 'champ-place';
+      const placeClass    = r => r === 1 ? 'p1' : r === 2 ? 'p2' : r === 3 ? 'p3' : '';
+      const placeNumClass = r => r <= 3 ? 'champ-place top' : 'champ-place';
 
       const table = document.createElement('table');
       table.className = 'champ-table';
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th class="c" style="width:52px;">Place</th>
-            <th>Player</th>
-            <th class="c">Front 9</th>
-            <th class="c">Back 9</th>
-            <th class="r">Total</th>
-          </tr>
-        </thead>`;
+      table.innerHTML = `<thead><tr>
+        <th class="c" style="width:52px;">Place</th>
+        <th>Player</th><th class="c">Front 9</th><th class="c">Back 9</th><th class="r">Total</th>
+      </tr></thead>`;
 
       const tbody = document.createElement('tbody');
       ranked.forEach(row => {
         const tr = document.createElement('tr');
         tr.className = placeClass(row.rank);
-        const frontDisplay = row.front || '—';
-        const backDisplay  = row.back  || '—';
-        const totalDisplay = row.total || '—';
         tr.innerHTML = `
           <td class="c"><span class="${placeNumClass(row.rank)}">${row.rank}</span></td>
           <td style="font-weight:500;color:var(--white);">${row.name}${row.note ? `<span style="font-size:0.75rem;color:var(--muted);margin-left:0.5rem;font-weight:400;">${row.note}</span>` : ''}</td>
-          <td class="c"><span class="champ-nine">${frontDisplay}</span></td>
-          <td class="c"><span class="champ-nine">${backDisplay}</span></td>
-          <td class="r"><span class="champ-total">${totalDisplay}</span></td>`;
+          <td class="c"><span class="champ-nine">${row.front || '\u2014'}</span></td>
+          <td class="c"><span class="champ-nine">${row.back  || '\u2014'}</span></td>
+          <td class="r"><span class="champ-total">${row.total || '\u2014'}</span></td>`;
         tbody.appendChild(tr);
       });
-
       table.appendChild(tbody);
       container.innerHTML = '';
       container.appendChild(table);
@@ -924,7 +884,7 @@
       for (let w = 0; w < TOTAL_WEEKS; w++) {
         const opt = document.createElement('option');
         opt.value = w;
-        opt.textContent = `Week ${w + 1} — ${WEEK_DATES[w]}`;
+        opt.textContent = `Week ${w + 1} \u2014 ${WEEK_DATES[w]}`;
         sel.appendChild(opt);
       }
     }
@@ -932,11 +892,9 @@
     function loadWeekScores() {
       const week = parseInt(document.getElementById('week-select').value);
       const data = loadData();
-      document.getElementById('editing-week-label').textContent = `Week ${week + 1} — ${WEEK_DATES[week]}`;
-
+      document.getElementById('editing-week-label').textContent = `Week ${week + 1} \u2014 ${WEEK_DATES[week]}`;
       const grid = document.getElementById('score-editor-grid');
       grid.innerHTML = '';
-
       PLAYERS.forEach(name => {
         const score = data[name]?.[week] ?? '';
         const tier = getPlayerTier(name);
@@ -945,9 +903,8 @@
         row.className = 'score-row';
         row.innerHTML = `
           <label>${name} <span class="tier-badge ${tierClass}">${tier}</span></label>
-          <input type="number" min="0" max="60" placeholder="—"
-            value="${score || ''}"
-            class="${score ? 'has-score' : ''}"
+          <input type="number" min="0" max="60" placeholder="\u2014"
+            value="${score || ''}" class="${score ? 'has-score' : ''}"
             data-player="${name}"
             oninput="this.classList.toggle('has-score', this.value !== '')">
         `;
@@ -955,11 +912,10 @@
       });
     }
 
-    function buildScoreEditor() {
-      loadWeekScores();
-    }
+    function buildScoreEditor() { loadWeekScores(); }
 
     async function saveScores() {
+      const btn    = document.querySelector('[onclick="saveScores()"]');
       const week   = parseInt(document.getElementById('week-select').value);
       const inputs = document.querySelectorAll('#score-editor-grid input');
       const scores = {};
@@ -969,7 +925,7 @@
         scores[input.dataset.player] = isNaN(val) ? 0 : val;
       });
 
-      // Update cache immediately so standings refresh without waiting
+      // Update cache immediately
       if (!_scoresCache) _scoresCache = {};
       Object.entries(scores).forEach(([name, val]) => {
         if (!_scoresCache[name]) _scoresCache[name] = {};
@@ -978,31 +934,33 @@
       });
       renderStandings();
 
+      if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+
       try {
-        const res  = await fetch(APPS_SCRIPT_URL, {
+        const res = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
           body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveWeek', week, scores })
         });
         const json = await res.json();
         if (json.error) throw new Error(json.error);
       } catch(e) {
-        alert('Save failed: ' + e.message);
+        alert('Save failed: ' + e.message + '\n\nOpen browser console (F12) for details.');
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Save &amp; Publish'; }
         return;
       }
 
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Save &amp; Publish'; }
       const flash = document.getElementById('saved-flash');
       flash.classList.add('show');
-      setTimeout(() => flash.classList.remove('show'), 2000);
+      setTimeout(() => flash.classList.remove('show'), 2500);
     }
 
     async function clearWeek() {
       if (!confirm('Clear all scores for this week?')) return;
       const week = parseInt(document.getElementById('week-select').value);
-
       if (_scoresCache) {
         PLAYERS.forEach(name => { if (_scoresCache[name]) delete _scoresCache[name][week]; });
       }
-
       try {
         await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
@@ -1012,7 +970,6 @@
         alert('Clear failed: ' + e.message);
         return;
       }
-
       loadWeekScores();
       renderStandings();
     }
@@ -1020,12 +977,10 @@
     // ── CHAMPIONSHIP EDITOR ────────────────────────────────────────
     function buildChampEditor() {
       const champ = loadChampData();
-      const grid = document.getElementById('champ-editor-grid');
+      const grid  = document.getElementById('champ-editor-grid');
       grid.innerHTML = '';
-
-      // Always show all 22 players (full roster), pre-fill if data exists
       const entries = {};
-      champ.forEach((e, i) => { if (e.name) entries[e.name] = e; });
+      champ.forEach(e => { if (e.name) entries[e.name] = e; });
 
       PLAYERS.forEach((name, i) => {
         const entry = entries[name] || {};
@@ -1054,7 +1009,6 @@
         if (!entries[i]) entries[i] = {};
         entries[i][input.dataset.field] = input.value.trim();
       });
-
       const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
       _champCache = arr;
       renderChampionship();
@@ -1070,16 +1024,16 @@
         alert('Save failed: ' + e.message);
         return;
       }
-
       const flash = document.getElementById('champ-saved-flash');
       flash.classList.add('show');
-      setTimeout(() => flash.classList.remove('show'), 2000);
+      setTimeout(() => flash.classList.remove('show'), 2500);
     }
 
     // ── INIT ───────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
       renderStandings();
     });
+
   </script>
 </body>
 </html>
