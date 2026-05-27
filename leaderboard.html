@@ -387,9 +387,9 @@
             </div>
           </div>
           <div class="tier-players-grid">
-            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
           </div>
         </div>
 
@@ -590,22 +590,42 @@
     }
 
     // ── DATA ───────────────────────────────────────────────────────
-    function loadData() {
-      try { return JSON.parse(localStorage.getItem('owga_scores_' + SEASON_YEAR) || '{}'); }
-      catch(e) { return {}; }
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
+
+    let _scoresCache = null;
+    let _champCache  = null;
+
+    async function fetchScores() {
+      if (_scoresCache) return _scoresCache;
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getScores`);
+        const json = await res.json();
+        _scoresCache = json.scores || {};
+      } catch(e) {
+        console.error('Could not load scores from sheet:', e);
+        _scoresCache = {};
+      }
+      return _scoresCache;
     }
 
-    function saveData(data) {
-      localStorage.setItem('owga_scores_' + SEASON_YEAR, JSON.stringify(data));
+    function loadData() {
+      return _scoresCache || {};
+    }
+
+    async function fetchChampData() {
+      if (_champCache) return _champCache;
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getChampionship`);
+        const json = await res.json();
+        _champCache = json.results || [];
+      } catch(e) {
+        _champCache = [];
+      }
+      return _champCache;
     }
 
     function loadChampData() {
-      try { return JSON.parse(localStorage.getItem('owga_champ_' + SEASON_YEAR) || '[]'); }
-      catch(e) { return []; }
-    }
-
-    function saveChampData(data) {
-      localStorage.setItem('owga_champ_' + SEASON_YEAR, JSON.stringify(data));
+      return _champCache || [];
     }
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
@@ -633,7 +653,8 @@
     }
 
     // ── RENDER STANDINGS ───────────────────────────────────────────
-    function renderStandings() {
+    async function renderStandings() {
+      await fetchScores();
       const data = loadData();
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
@@ -697,7 +718,8 @@
     }
 
     // ── RENDER WEEKLY TABLE ────────────────────────────────────────
-    function renderWeekly() {
+    async function renderWeekly() {
+      await fetchScores();
       const data = loadData();
 
       // Find last week with any data
@@ -776,7 +798,8 @@
     }
 
     // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
-    function renderChampionship() {
+    async function renderChampionship() {
+      await fetchChampData();
       const champ = loadChampData();
       const container = document.getElementById('champ-content');
 
@@ -871,11 +894,15 @@
     }
 
     // ── ADMIN ──────────────────────────────────────────────────────
-    function adminLogin() {
+    async function adminLogin() {
       const pw = document.getElementById('admin-pw').value;
       if (pw === ADMIN_PASSWORD) {
         document.getElementById('admin-gate').style.display = 'none';
         document.getElementById('admin-editor').style.display = 'block';
+        _scoresCache = null;
+        _champCache  = null;
+        await fetchScores();
+        await fetchChampData();
         buildWeekSelector();
         buildScoreEditor();
         buildChampEditor();
@@ -932,32 +959,60 @@
       loadWeekScores();
     }
 
-    function saveScores() {
-      const week = parseInt(document.getElementById('week-select').value);
-      const data = loadData();
+    async function saveScores() {
+      const week   = parseInt(document.getElementById('week-select').value);
       const inputs = document.querySelectorAll('#score-editor-grid input');
+      const scores = {};
 
       inputs.forEach(input => {
-        const name = input.dataset.player;
-        if (!data[name]) data[name] = {};
         const val = parseInt(input.value);
-        data[name][week] = isNaN(val) ? 0 : val;
+        scores[input.dataset.player] = isNaN(val) ? 0 : val;
       });
 
-      saveData(data);
+      // Update cache immediately so standings refresh without waiting
+      if (!_scoresCache) _scoresCache = {};
+      Object.entries(scores).forEach(([name, val]) => {
+        if (!_scoresCache[name]) _scoresCache[name] = {};
+        if (val > 0) _scoresCache[name][week] = val;
+        else delete _scoresCache[name][week];
+      });
       renderStandings();
+
+      try {
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveWeek', week, scores })
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+      } catch(e) {
+        alert('Save failed: ' + e.message);
+        return;
+      }
 
       const flash = document.getElementById('saved-flash');
       flash.classList.add('show');
       setTimeout(() => flash.classList.remove('show'), 2000);
     }
 
-    function clearWeek() {
+    async function clearWeek() {
       if (!confirm('Clear all scores for this week?')) return;
       const week = parseInt(document.getElementById('week-select').value);
-      const data = loadData();
-      PLAYERS.forEach(name => { if (data[name]) data[name][week] = 0; });
-      saveData(data);
+
+      if (_scoresCache) {
+        PLAYERS.forEach(name => { if (_scoresCache[name]) delete _scoresCache[name][week]; });
+      }
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'clearWeek', week })
+        });
+      } catch(e) {
+        alert('Clear failed: ' + e.message);
+        return;
+      }
+
       loadWeekScores();
       renderStandings();
     }
@@ -991,8 +1046,8 @@
       });
     }
 
-    function saveChampionship() {
-      const inputs = document.querySelectorAll('#champ-editor-grid input');
+    async function saveChampionship() {
+      const inputs  = document.querySelectorAll('#champ-editor-grid input');
       const entries = {};
       inputs.forEach(input => {
         const i = input.dataset.ci;
@@ -1001,8 +1056,20 @@
       });
 
       const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
-      saveChampData(arr);
+      _champCache = arr;
       renderChampionship();
+
+      try {
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveChampionship', results: arr })
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+      } catch(e) {
+        alert('Save failed: ' + e.message);
+        return;
+      }
 
       const flash = document.getElementById('champ-saved-flash');
       flash.classList.add('show');
