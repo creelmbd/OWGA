@@ -340,7 +340,7 @@
 
         <p class="section-note">
           <i class="fas fa-info-circle"></i>
-          Standings based on best 6 rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores.
+          Standings based on best 6 rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores. Players without 2026 scores are seeded by tier (A: 36, B: 38, C: 40) shown in grey.
         </p>
       </div>
 
@@ -546,6 +546,13 @@
 
     function getSeasonRank(name) { return SEASON_RANK[name] ?? 99; }
 
+    // Tier seed averages — used to order unplayed players before they have
+    // any 2026 scores. A=36, B=38, C=40. Within each tier, season rank breaks ties.
+    function getPriorAvg(name) {
+      const tier = getPlayerTier(name);
+      return tier === 'A' ? 36 : tier === 'B' ? 38 : 40;
+    }
+
     // Tier assignments: A = scratch, B = -1/round, C = -2/round
     const TIER_A = new Set(['Brad Minges','Randy Bulach','Zak Curry']);
     const TIER_B = new Set(['Steve Griffin','Joe McConnell','Tony Bulach','Joey Jacobs','Brian Creelman','Bruce Tedesco','Dave Tracy','Hobie Bolton','Cody Vatter','James Nelson','Mike Tracy','Dan Heitman']);
@@ -570,22 +577,42 @@
     }
 
     // ── DATA ───────────────────────────────────────────────────────
-    function loadData() {
-      try { return JSON.parse(localStorage.getItem('owga_scores_' + SEASON_YEAR) || '{}'); }
-      catch(e) { return {}; }
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
+
+    let _scoresCache = null;
+    let _champCache  = null;
+
+    async function fetchScores() {
+      if (_scoresCache) return _scoresCache;
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getScores`);
+        const json = await res.json();
+        _scoresCache = json.scores || {};
+      } catch(e) {
+        console.error('Could not load scores:', e);
+        _scoresCache = {};
+      }
+      return _scoresCache;
     }
 
-    function saveData(data) {
-      localStorage.setItem('owga_scores_' + SEASON_YEAR, JSON.stringify(data));
+    function loadData() {
+      return _scoresCache || {};
+    }
+
+    async function fetchChampData() {
+      if (_champCache) return _champCache;
+      try {
+        const res  = await fetch(`${APPS_SCRIPT_URL}?action=getChampionship`);
+        const json = await res.json();
+        _champCache = json.results || [];
+      } catch(e) {
+        _champCache = [];
+      }
+      return _champCache;
     }
 
     function loadChampData() {
-      try { return JSON.parse(localStorage.getItem('owga_champ_' + SEASON_YEAR) || '[]'); }
-      catch(e) { return []; }
-    }
-
-    function saveChampData(data) {
-      localStorage.setItem('owga_champ_' + SEASON_YEAR, JSON.stringify(data));
+      return _champCache || [];
     }
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
@@ -613,25 +640,23 @@
     }
 
     // ── RENDER STANDINGS ───────────────────────────────────────────
-    function renderStandings() {
+    async function renderStandings() {
+      await fetchScores();
       const data = loadData();
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
         const calc = calcPlayer(name, scores);
-        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), ...calc };
+        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), ...calc };
       });
 
-      // Sort: no scores → by season rank; scores → by adj avg (2dp) then season rank
+      // Sort: players with 2026 scores → by adj avg; unplayed → by prior season avg then season rank
       rows.sort((a, b) => {
-        if (a.avg !== null && b.avg !== null) {
-          const aDp = Math.round(a.avg * 100);
-          const bDp = Math.round(b.avg * 100);
-          if (aDp !== bDp) return aDp - bDp;
-          return a.seasonRank - b.seasonRank;
-        }
-        if (a.avg !== null) return -1;
-        if (b.avg !== null) return 1;
-        return a.seasonRank - b.seasonRank; // both unplayed: season rank only
+        const aAvg = a.avg !== null ? a.avg : (a.priorAvg !== null ? a.priorAvg + 1000 : 9999);
+        const bAvg = b.avg !== null ? b.avg : (b.priorAvg !== null ? b.priorAvg + 1000 : 9999);
+        const aDp = Math.round(aAvg * 100);
+        const bDp = Math.round(bAvg * 100);
+        if (aDp !== bDp) return aDp - bDp;
+        return a.seasonRank - b.seasonRank;
       });
 
       const tbody = document.getElementById('standings-tbody');
@@ -657,7 +682,13 @@
           <td class="player-name-cell">${row.name}</td>
           <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
           <td class="c stat-muted hide-mobile">${row.seasonRank}</td>
-          <td class="r"><span class="${row.avg !== null ? 'avg-val' : 'stat-muted'}">${row.avg !== null ? row.avg.toFixed(2) : '—'}</span></td>
+          <td class="r">
+            ${row.avg !== null
+              ? `<span class="avg-val">${row.avg.toFixed(2)}</span>`
+              : row.priorAvg !== null
+                ? `<span class="stat-muted" title="Tier seed average">${row.priorAvg.toFixed(0)}</span>`
+                : `<span class="stat-muted">—</span>`}
+          </td>
           <td class="r stat-muted hide-mobile">${row.total || '—'}</td>
           <td class="c stat-muted">${row.played || '—'}</td>
           <td class="c stat-muted hide-mobile">${row.dropped.length || '—'}</td>
@@ -674,7 +705,8 @@
     }
 
     // ── RENDER WEEKLY TABLE ────────────────────────────────────────
-    function renderWeekly() {
+    async function renderWeekly() {
+      await fetchScores();
       const data = loadData();
 
       // Find last week with any data
@@ -696,16 +728,13 @@
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
         const calc = calcPlayer(name, scores);
-        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), scores, ...calc };
+        return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), scores, ...calc };
       }).sort((a, b) => {
-        if (a.avg !== null && b.avg !== null) {
-          const aDp = Math.round(a.avg * 100);
-          const bDp = Math.round(b.avg * 100);
-          if (aDp !== bDp) return aDp - bDp;
-          return a.seasonRank - b.seasonRank;
-        }
-        if (a.avg !== null) return -1;
-        if (b.avg !== null) return 1;
+        const aAvg = a.avg !== null ? a.avg : (a.priorAvg !== null ? a.priorAvg + 1000 : 9999);
+        const bAvg = b.avg !== null ? b.avg : (b.priorAvg !== null ? b.priorAvg + 1000 : 9999);
+        const aDp = Math.round(aAvg * 100);
+        const bDp = Math.round(bAvg * 100);
+        if (aDp !== bDp) return aDp - bDp;
         return a.seasonRank - b.seasonRank;
       });
 
@@ -756,7 +785,8 @@
     }
 
     // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
-    function renderChampionship() {
+    async function renderChampionship() {
+      await fetchChampData();
       const champ = loadChampData();
       const container = document.getElementById('champ-content');
 
@@ -807,11 +837,16 @@
     }
 
     // ── ADMIN ──────────────────────────────────────────────────────
-    function adminLogin() {
+    async function adminLogin() {
       const pw = document.getElementById('admin-pw').value;
       if (pw === ADMIN_PASSWORD) {
         document.getElementById('admin-gate').style.display = 'none';
         document.getElementById('admin-editor').style.display = 'block';
+        // Force fresh fetch so editor always shows current sheet data
+        _scoresCache = null;
+        _champCache  = null;
+        await fetchScores();
+        await fetchChampData();
         buildWeekSelector();
         buildScoreEditor();
         buildChampEditor();
@@ -868,32 +903,61 @@
       loadWeekScores();
     }
 
-    function saveScores() {
-      const week = parseInt(document.getElementById('week-select').value);
-      const data = loadData();
+    async function saveScores() {
+      const week   = parseInt(document.getElementById('week-select').value);
       const inputs = document.querySelectorAll('#score-editor-grid input');
+      const scores = {};
 
       inputs.forEach(input => {
-        const name = input.dataset.player;
-        if (!data[name]) data[name] = {};
         const val = parseInt(input.value);
-        data[name][week] = isNaN(val) ? 0 : val;
+        scores[input.dataset.player] = isNaN(val) ? 0 : val;
       });
 
-      saveData(data);
+      // Update cache immediately so standings refresh without waiting
+      if (!_scoresCache) _scoresCache = {};
+      Object.entries(scores).forEach(([name, val]) => {
+        if (!_scoresCache[name]) _scoresCache[name] = {};
+        if (val > 0) _scoresCache[name][week] = val;
+        else delete _scoresCache[name][week];
+      });
+
       renderStandings();
+
+      try {
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveWeek', week, scores })
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+      } catch(e) {
+        alert('Save failed: ' + e.message);
+        return;
+      }
 
       const flash = document.getElementById('saved-flash');
       flash.classList.add('show');
       setTimeout(() => flash.classList.remove('show'), 2000);
     }
 
-    function clearWeek() {
+    async function clearWeek() {
       if (!confirm('Clear all scores for this week?')) return;
       const week = parseInt(document.getElementById('week-select').value);
-      const data = loadData();
-      PLAYERS.forEach(name => { if (data[name]) data[name][week] = 0; });
-      saveData(data);
+
+      if (_scoresCache) {
+        PLAYERS.forEach(name => { if (_scoresCache[name]) delete _scoresCache[name][week]; });
+      }
+
+      try {
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'clearWeek', week })
+        });
+      } catch(e) {
+        alert('Clear failed: ' + e.message);
+        return;
+      }
+
       loadWeekScores();
       renderStandings();
     }
@@ -918,8 +982,8 @@
       }
     }
 
-    function saveChampionship() {
-      const inputs = document.querySelectorAll('#champ-editor-grid input');
+    async function saveChampionship() {
+      const inputs  = document.querySelectorAll('#champ-editor-grid input');
       const entries = {};
       inputs.forEach(input => {
         const i = input.dataset.ci;
@@ -928,8 +992,22 @@
       });
 
       const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
-      saveChampData(arr);
+
+      // Update cache optimistically
+      _champCache = arr;
       renderChampionship();
+
+      try {
+        const res  = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ password: ADMIN_PASSWORD, action: 'saveChampionship', results: arr })
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
+      } catch(e) {
+        alert('Save failed: ' + e.message);
+        return;
+      }
 
       const flash = document.getElementById('champ-saved-flash');
       flash.classList.add('show');
