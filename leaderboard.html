@@ -7,8 +7,30 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="scripts.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     .lb-wrap { padding: 3rem 5%; max-width: 1300px; margin: 0 auto; }
+
+    .btn-snapshot {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: var(--gold-muted);
+      padding: 0.4rem 0.9rem;
+      border-radius: var(--radius);
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    .btn-snapshot:hover { background: var(--gold-glow); color: var(--gold); border-color: var(--gold-muted); }
+    .btn-snapshot.copied { color: #72d48a; border-color: rgba(114,212,138,0.4); }
+    .btn-snapshot:disabled { opacity: 0.5; cursor: wait; }
 
     /* Tabs */
     .lb-tabs {
@@ -314,7 +336,12 @@
             <span class="section-label">Season Standings</span>
             <h2>Current Rankings</h2>
           </div>
-          <span id="rounds-played-label" style="font-size:0.78rem;color:var(--muted);"></span>
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <span id="rounds-played-label" style="font-size:0.78rem;color:var(--muted);"></span>
+            <button class="btn-snapshot" id="snapshot-btn" onclick="copySnapshot()" title="Copy standings image to clipboard">
+              <i class="fas fa-camera"></i> Copy Snapshot
+            </button>
+          </div>
         </div>
 
         <div class="legend">
@@ -1027,6 +1054,52 @@
       const flash = document.getElementById('champ-saved-flash');
       flash.classList.add('show');
       setTimeout(() => flash.classList.remove('show'), 2500);
+    }
+
+    // ── SNAPSHOT ───────────────────────────────────────────────────
+    async function copySnapshot() {
+      const btn = document.getElementById('snapshot-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Capturing…';
+
+      const target = document.getElementById('panel-standings');
+
+      try {
+        const canvas = await html2canvas(target, {
+          backgroundColor: '#0b1120',
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          ignoreElements: el => el.id === 'snapshot-btn'
+        });
+
+        try {
+          canvas.toBlob(async blob => {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+              btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
+              btn.classList.remove('copied');
+            }, 2500);
+          }, 'image/png');
+        } catch(clipErr) {
+          const link = document.createElement('a');
+          link.download = `owga-standings-${new Date().toISOString().slice(0,10)}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
+        }
+      } catch(err) {
+        console.error('Snapshot failed:', err);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
+        alert('Snapshot failed. Try again.');
+      }
     }
 
     // ── INIT ───────────────────────────────────────────────────────
