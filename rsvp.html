@@ -35,7 +35,7 @@
       margin-top: 0.3rem;
     }
     .rsvp-meta i { color: var(--gold-muted); margin-right: 0.3rem; }
-    .rsvp-updated { font-size: 0.72rem; color: var(--muted); }
+    .rsvp-updated { font-size: 0.75rem; color: var(--muted); }
 
     .btn-sheet {
       display: inline-flex;
@@ -187,7 +187,7 @@
       min-width: 36px;
       padding: 0.2rem 0.45rem;
       border-radius: 3px;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.04em;
     }
@@ -205,7 +205,7 @@
     .rsvp-table tfoot tr td {
       padding: 0.5rem 0.4rem;
       border-top: 1px solid var(--border-strong);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       text-align: center;
       color: var(--muted);
@@ -278,7 +278,7 @@
     }
     .pairings-round-tag {
       font-family: var(--sans);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -432,7 +432,7 @@
     }
     .attending-chip .chip-rank {
       font-family: var(--serif-display);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--gold-muted);
     }
 
@@ -578,26 +578,26 @@
     .solo-rotation-note strong { color: #e8c060; }
 
     /* Copy snapshot button */
-    .btn-snapshot-pairings {
+    .btn-snapshot {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
       background: transparent;
       border: 1px solid var(--border-strong);
       color: var(--gold-muted);
-      padding: 0.35rem 0.8rem;
+      padding: 0.4rem 0.9rem;
       border-radius: var(--radius);
       font-family: var(--sans);
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.06em;
       cursor: pointer;
       transition: background 0.2s, color 0.2s;
       white-space: nowrap;
     }
-    .btn-snapshot-pairings:hover { background: var(--gold-glow); color: var(--gold); }
-    .btn-snapshot-pairings.copied { color: #72d48a; border-color: rgba(114,212,138,0.4); }
-    .btn-snapshot-pairings:disabled { opacity: 0.5; cursor: wait; }
+    .btn-snapshot:hover { background: var(--gold-glow); color: var(--gold); }
+    .btn-snapshot.copied { color: #72d48a; border-color: rgba(114,212,138,0.4); }
+    .btn-snapshot:disabled { opacity: 0.5; cursor: wait; }
 
     /* Mobile */
     @media (max-width: 600px) {
@@ -926,8 +926,8 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
           <span class="pairings-round-tag">${roundDate} &bull; First tee 5:09 PM</span>
-          <button class="btn-snapshot-pairings" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
-            <i class="fas fa-camera"></i> Copy
+          <button class="btn-snapshot" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
+            <i class="fas fa-camera"></i> Copy Snapshot
           </button>
         </div>
       </div>
@@ -1051,15 +1051,19 @@
       const rows = parseCSV(text);
       if (rows.length < 3) throw new Error('Unexpected sheet structure');
 
+      // rows[0] = column headers (Rank/Count/Player/May 22…)
+      // Player data starts at rows[1] — CSV has only one header row
       const headerRow = rows[0];
 
-      // Find championship column
+      // Find championship column — header says "Aug 22" not "Championship"
       let champCol = -1;
       for (let c = headerRow.length - 1; c >= 0; c--) {
-        if ((headerRow[c] || '').toLowerCase().includes('champion')) { champCol = c; break; }
+        const h = (headerRow[c] || '').toLowerCase();
+        if (h.includes('champion') || h.includes('aug 22') || h.includes('aug22')) { champCol = c; break; }
       }
 
       // Round columns: col 3 up to champCol (exclusive)
+      // Sheet layout: A=Rank(0), B=Count(1), C=Player(2), D+=RSVP dates starting at index 3
       const roundCols = [];
       const endCol = champCol > 0 ? champCol : headerRow.length;
       for (let c = 3; c < endCol; c++) roundCols.push(c);
@@ -1067,9 +1071,9 @@
       // Split player vs footer rows
       const playerRows = [], footerRows = [];
       let inFooter = false;
-      for (let r = 2; r < rows.length; r++) {
+      for (let r = 1; r < rows.length; r++) {
         const nameCell = (rows[r][2] || '').trim();
-        if (!nameCell || nameCell.toLowerCase().startsWith('count') || nameCell.toLowerCase().startsWith('remaining')) {
+        if (nameCell && (nameCell.toLowerCase().startsWith('count') || nameCell.toLowerCase().startsWith('remaining'))) {
           inFooter = true;
         }
         if (inFooter) { if (nameCell) footerRows.push(rows[r]); }
@@ -1137,7 +1141,7 @@
     const target = document.getElementById('tee-groups-capture');
     if (!target) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+      btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
       return;
     }
 
@@ -1158,7 +1162,7 @@
           btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
           btn.classList.add('copied');
           setTimeout(() => {
-            btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+            btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
             btn.classList.remove('copied');
           }, 2500);
         }, 'image/png');
@@ -1169,12 +1173,12 @@
         link.href = canvas.toDataURL('image/png');
         link.click();
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+        btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
       }
     } catch(err) {
       console.error('Snapshot failed:', err);
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-camera"></i> Copy';
+      btn.innerHTML = '<i class="fas fa-camera"></i> Copy Snapshot';
       alert('Snapshot failed — try again.');
     }
   }
