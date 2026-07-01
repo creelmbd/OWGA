@@ -450,6 +450,56 @@
     }
     .pairings-loading i { display: block; font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--border-strong); }
 
+    /* Locked placeholder */
+    .pairings-locked {
+      padding: 4rem 2rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--navy-card);
+    }
+    .pairings-lock-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: var(--gold-glow);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.25rem;
+      font-size: 1.3rem;
+      color: var(--gold-muted);
+    }
+    .pairings-locked h3 {
+      font-family: var(--serif-display);
+      font-size: 1.3rem;
+      color: var(--white);
+      letter-spacing: 0.04em;
+      margin-bottom: 0.6rem;
+    }
+    .pairings-locked p {
+      font-size: 0.9rem;
+      color: var(--muted);
+      max-width: 380px;
+      margin: 0 auto 1.25rem;
+      line-height: 1.6;
+    }
+    .pairings-locked p strong { color: var(--gold); }
+    .pairings-lock-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.35rem 0.85rem;
+    }
+    .pairings-lock-meta i { color: var(--gold-muted); }
+    .pairings-lock-meta strong { color: var(--cream); }
+
     .tee-groups {
       display: flex;
       flex-direction: column;
@@ -915,6 +965,38 @@
     return groups;
   }
 
+  // ── Pairings time gate: only visible from noon ET on Friday ────
+  function pairingsUnlocked() {
+    // Convert current time to US Eastern (handles EST/EDT automatically)
+    const now = new Date();
+    const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+    const et = new Date(etStr);
+    const dayOfWeek = et.getDay();   // 0=Sun … 5=Fri … 6=Sat
+    const hour = et.getHours();
+    const minute = et.getMinutes();
+    // Unlock: Friday (5) at or after 12:00 PM, through end of Saturday (6)
+    if (dayOfWeek === 5 && (hour > 12 || (hour === 12 && minute >= 0))) return true;
+    if (dayOfWeek === 6) return true;
+    return false;
+  }
+
+  function minutesUntilUnlock() {
+    const now = new Date();
+    const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+    const et = new Date(etStr);
+    // Find next Friday noon ET
+    const day = et.getDay();
+    let daysUntilFri = (5 - day + 7) % 7;
+    if (day === 5 && (et.getHours() < 12)) daysUntilFri = 0; // same Friday, not yet noon
+    if (day === 5 && et.getHours() >= 12) daysUntilFri = 7;  // already past, next Friday
+    if (day === 6) daysUntilFri = 6; // Saturday, next Friday
+
+    const nextFriNoon = new Date(et);
+    nextFriNoon.setDate(et.getDate() + daysUntilFri);
+    nextFriNoon.setHours(12, 0, 0, 0);
+    return Math.ceil((nextFriNoon - et) / 60000);
+  }
+
   // ── Render pairings ────────────────────────────────────────────
   async function renderPairings(playerRows, roundCols) {
     const wrap = document.getElementById('pairings-wrap');
@@ -924,6 +1006,30 @@
     let nextRoundIdx = ROUND_ISO.findIndex(d => d >= todayStr);
     if (nextRoundIdx === -1) {
       wrap.innerHTML = `<div class="pairings-loading"><i class="fas fa-trophy" style="color:var(--gold-muted);"></i>Season complete — no upcoming rounds.</div>`;
+      return;
+    }
+
+    // ── Time gate: show placeholder before noon ET on Friday ──────
+    if (!pairingsUnlocked()) {
+      const mins = minutesUntilUnlock();
+      const hrs  = Math.floor(mins / 60);
+      const rem  = mins % 60;
+      const eta  = hrs > 0
+        ? `${hrs}h ${rem}m`
+        : `${rem} minute${rem !== 1 ? 's' : ''}`;
+
+      wrap.innerHTML = `
+        <div class="pairings-locked">
+          <div class="pairings-lock-icon"><i class="fas fa-lock"></i></div>
+          <h3>Pairings drop Friday at noon</h3>
+          <p>Check back in <strong>${eta}</strong> — pairings are posted each Friday at 12:00 PM Eastern once the RSVP list is confirmed.</p>
+          <div class="pairings-lock-meta">
+            <i class="fas fa-calendar-alt"></i> Next round: <strong>${ROUND_DATES[nextRoundIdx]}</strong>
+          </div>
+        </div>`;
+
+      // Auto-refresh every minute so the countdown stays live
+      setTimeout(() => renderPairings(playerRows, roundCols), 60000);
       return;
     }
 
