@@ -823,29 +823,28 @@
     'Christian Tracy': 'C'
   };
 
-  // ── Troll number game — every guess is wrong, always ──────────
-  const TROLL_WRONG = [
-    'Nope. Try again.',
-    'Not even close.',
-    'Wrong. Sorry.',
-    'Ooh, so close. (Not really.)',
-    'That\'s not it.',
-    'Incorrect. Nice try though.',
-    'The number was definitely not that.',
-    'Cold. Ice cold.',
-    'Swing and a miss.',
-    'Almost! (No.)',
-    'Better luck next time.'
-  ];
-  let _trollIdx = Math.floor(Math.random() * TROLL_WRONG.length);
+  // ── Troll number game — always wrong, "correct" answer shifts ──
+  let _trollAnswer = Math.floor(Math.random() * 10) + 1;
+
+  function _newTrollAnswer(exclude) {
+    let next;
+    do { next = Math.floor(Math.random() * 10) + 1; } while (next === exclude);
+    return next;
+  }
 
   function trollGuess(btn, n) {
-    if (btn.classList.contains('guessed')) return;
-    btn.classList.add('guessed');
     const result = document.getElementById('lock-game-result');
     if (!result) return;
-    result.textContent = TROLL_WRONG[_trollIdx % TROLL_WRONG.length];
-    _trollIdx++;
+
+    // Flash the guessed button red
+    btn.classList.add('guessed');
+
+    // Pick a new "correct" answer that is never what they just guessed
+    _trollAnswer = _newTrollAnswer(n);
+    result.textContent = `Nope! The number was ${_trollAnswer}. Try again.`;
+
+    // Reset the button after a short moment so they can chase the new number
+    setTimeout(() => btn.classList.remove('guessed'), 600);
   }
 
   // ── Tab switching ──────────────────────────────────────────────
