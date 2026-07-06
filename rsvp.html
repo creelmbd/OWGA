@@ -97,6 +97,47 @@
     }
     .tee-banner i { flex-shrink: 0; }
 
+    /* ── Week summary bar ── */
+    .rsvp-week-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .rsvp-week-label {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .rsvp-count-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .rsvp-count-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.7rem;
+      border-radius: 2px;
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .rsvp-count-chip .chip-num {
+      font-family: var(--serif-display);
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .chip-yes  { background: rgba(60,160,80,0.15);  color: #72d48a; border: 1px solid rgba(60,160,80,0.25); }
+    .chip-no   { background: rgba(200,60,60,0.12);  color: #e07878; border: 1px solid rgba(200,60,60,0.2); }
+    .chip-ttd  { background: rgba(230,160,20,0.12); color: #e8b84a; border: 1px solid rgba(230,160,20,0.2); }
+    .chip-open { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+
     /* ── Table wrapper ── */
     .rsvp-scroll {
       overflow-x: auto;
@@ -110,10 +151,10 @@
       border-collapse: collapse;
       font-family: var(--sans);
       font-size: 0.8rem;
-      min-width: 900px;
+      min-width: 700px;
     }
 
-    /* Header row */
+    /* Header rows */
     .rsvp-table thead tr th {
       background: rgba(201,168,76,0.08);
       border-bottom: 1px solid var(--border-strong);
@@ -125,11 +166,25 @@
       text-transform: uppercase;
       color: var(--gold);
       text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 2;
     }
     .rsvp-table thead tr th.col-player {
       text-align: left;
       padding-left: 1rem;
-      min-width: 140px;
+      min-width: 150px;
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: rgba(22,31,48,0.98);
+    }
+    .rsvp-table thead tr th.col-next {
+      background: rgba(60,160,80,0.14);
+      color: #72d48a;
+      border-left: 2px solid rgba(60,160,80,0.4);
+      border-right: 2px solid rgba(60,160,80,0.4);
+      min-width: 80px;
     }
     .rsvp-table thead tr th.col-champ {
       color: var(--gold-bright);
@@ -140,6 +195,11 @@
       min-width: 38px;
       color: var(--muted);
       font-size: 0.6rem;
+    }
+    .rsvp-table thead tr th.col-past {
+      color: rgba(138,149,168,0.5);
+      font-size: 0.6rem;
+      opacity: 0.7;
     }
 
     /* Sub-header (date row) */
@@ -152,8 +212,22 @@
       padding: 0.35rem 0.5rem;
       border-bottom: 1px solid var(--border);
       text-align: center;
+      position: sticky;
+      top: 33px; /* height of first header row */
+      z-index: 2;
     }
-    .rsvp-table .date-row th.col-player { text-align: left; padding-left: 1rem; }
+    .rsvp-table .date-row th.col-player {
+      text-align: left;
+      padding-left: 1rem;
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: rgba(18,27,42,0.98);
+    }
+    .rsvp-table .date-row th.col-next {
+      background: rgba(60,160,80,0.08);
+      color: #72d48a;
+    }
 
     /* Body rows */
     .rsvp-table tbody tr {
@@ -162,8 +236,6 @@
     }
     .rsvp-table tbody tr:last-child { border-bottom: none; }
     .rsvp-table tbody tr:hover { background: rgba(255,255,255,0.025); }
-
-    /* Alternating rows */
     .rsvp-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.015); }
     .rsvp-table tbody tr:nth-child(even):hover { background: rgba(255,255,255,0.03); }
 
@@ -178,12 +250,30 @@
       font-weight: 500;
       color: var(--white);
       white-space: nowrap;
+      position: sticky;
+      left: 0;
+      background: var(--navy-card);
+      z-index: 1;
+      border-right: 1px solid var(--border);
     }
+    .rsvp-table tr:nth-child(even) td.col-player { background: rgba(22,31,48,0.98); }
     .rsvp-table td.col-count {
       font-family: var(--serif-display);
       font-size: 0.9rem;
       color: var(--muted);
     }
+
+    /* Next round column highlight */
+    .rsvp-table td.col-next, .rsvp-table tfoot td.col-next {
+      border-left: 2px solid rgba(60,160,80,0.35);
+      border-right: 2px solid rgba(60,160,80,0.35);
+      background: rgba(60,160,80,0.06);
+    }
+    .rsvp-table tr:nth-child(even) td.col-next { background: rgba(60,160,80,0.09); }
+
+    /* Past columns — slightly dimmed */
+    .rsvp-table td.col-past { opacity: 0.5; }
+    .rsvp-table thead th.col-past { opacity: 0.6; }
 
     /* RSVP status cells */
     .rsvp-cell {
@@ -202,10 +292,8 @@
     .rsvp-ttd  { background: rgba(230,160,20,0.18); color: #e8b84a; }
     .rsvp-empty { color: rgba(255,255,255,0.15); font-size: 0.7rem; }
 
-    /* Championship column styling */
-    .col-champ-cell {
-      border-left: 1px solid var(--border);
-    }
+    /* Championship column */
+    .col-champ-cell { border-left: 1px solid var(--border); }
 
     /* ── Footer / counts ── */
     .rsvp-table tfoot tr td {
@@ -226,6 +314,11 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--gold);
+      position: sticky;
+      left: 0;
+      background: rgba(22,31,48,0.98);
+      border-right: 1px solid var(--border);
+      z-index: 1;
     }
     .count-yes  { color: #72d48a; }
     .count-no   { color: #e07878; }
@@ -1031,6 +1124,8 @@
           <span class="legend-chip"><span class="lc-dot" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);"></span> No response yet</span>
         </div>
 
+        <div id="rsvp-week-bar" class="rsvp-week-bar" style="display:none;"></div>
+
         <div class="rsvp-scroll">
           <div id="rsvp-table-wrap">
             <div class="rsvp-state">
@@ -1700,24 +1795,76 @@
       // Render pairings (uses same parsed data)
       renderPairings(playerRows, roundCols);
 
-      // ── Build RSVP table ───────────────────────────────────────
+      // ── Determine next upcoming round ─────────────────────────
+      const todayStr = new Date().toISOString().slice(0, 10);
+      let nextRoundIdx = ROUND_ISO.findIndex(d => d >= todayStr);
+      if (nextRoundIdx === -1) nextRoundIdx = roundCols.length - 1; // season over, highlight last
+
+      // ── Count Yes/No/TTD/Open for next round ──────────────────
+      const nextCol = roundCols[nextRoundIdx];
+      let cntYes = 0, cntNo = 0, cntTtd = 0, cntOpen = 0;
+      playerRows.forEach(row => {
+        const v = (nextCol !== undefined ? (row[nextCol] || '') : '').trim().toLowerCase();
+        if (v === 'yes') cntYes++;
+        else if (v === 'no') cntNo++;
+        else if (v === 'ttd') cntTtd++;
+        else cntOpen++;
+      });
+
+      // ── Render week summary bar ───────────────────────────────
+      const weekBar = document.getElementById('rsvp-week-bar');
+      if (weekBar) {
+        weekBar.style.display = 'flex';
+        weekBar.innerHTML = `
+          <span class="rsvp-week-label">${ROUND_LABELS[nextRoundIdx]} · ${ROUND_DATES[nextRoundIdx]}</span>
+          <div class="rsvp-count-chips">
+            <span class="rsvp-count-chip chip-yes"><span class="chip-num">${cntYes}</span> Yes</span>
+            <span class="rsvp-count-chip chip-no"><span class="chip-num">${cntNo}</span> No</span>
+            ${cntTtd > 0 ? `<span class="rsvp-count-chip chip-ttd"><span class="chip-num">${cntTtd}</span> TTD</span>` : ''}
+            ${cntOpen > 0 ? `<span class="rsvp-count-chip chip-open"><span class="chip-num">${cntOpen}</span> No response</span>` : ''}
+          </div>`;
+      }
+
+      // ── Build RSVP table ──────────────────────────────────────
+      // col class helper: highlight next round, dim past rounds
+      function colCls(i) {
+        if (i === nextRoundIdx) return 'col-next';
+        if (i < nextRoundIdx) return 'col-past';
+        return '';
+      }
+
       let thead = '<thead><tr>';
-      thead += `<th class="col-count">Cnt</th><th class="col-player">Player</th>`;
-      roundCols.forEach((col, i) => { thead += `<th>${ROUND_LABELS[i] || `Rd ${i+1}`}</th>`; });
+      thead += `<th class="col-player">Player</th>`;
+      // Next round FIRST, then future, then past at the end
+      const orderedIdxs = [
+        nextRoundIdx,
+        ...roundCols.map((_, i) => i).filter(i => i > nextRoundIdx),
+        ...roundCols.map((_, i) => i).filter(i => i < nextRoundIdx),
+      ];
+      orderedIdxs.forEach(i => {
+        const cls = i === nextRoundIdx ? 'col-next' : i < nextRoundIdx ? 'col-past' : '';
+        thead += `<th class="${cls}">${ROUND_LABELS[i] || `Rd ${i+1}`}</th>`;
+      });
       if (champCol > 0) thead += `<th class="col-champ">Champ</th>`;
       thead += '</tr><tr class="date-row">';
-      thead += `<th class="col-player" colspan="2">Indian Ridge Golf Club</th>`;
-      roundCols.forEach((col, i) => { thead += `<th>${ROUND_DATES[i] || ''}</th>`; });
+      thead += `<th class="col-player">Indian Ridge Golf Club</th>`;
+      orderedIdxs.forEach(i => {
+        const cls = i === nextRoundIdx ? 'col-next' : i < nextRoundIdx ? 'col-past' : '';
+        thead += `<th class="${cls}">${ROUND_DATES[i] || ''}</th>`;
+      });
       if (champCol > 0) thead += `<th>Aug 22</th>`;
       thead += '</tr></thead>';
 
       let tbody = '<tbody>';
       playerRows.forEach(row => {
-        const count = (row[1] || '').trim();
-        const name  = (row[2] || '').trim();
+        const name = (row[2] || '').trim();
         if (!name) return;
-        tbody += `<tr><td class="col-count">${count || '—'}</td><td class="col-player">${name}</td>`;
-        roundCols.forEach(col => { tbody += `<td>${rsvpCell((row[col] || '').trim())}</td>`; });
+        tbody += `<tr><td class="col-player">${name}</td>`;
+        orderedIdxs.forEach(i => {
+          const col = roundCols[i];
+          const cls = i === nextRoundIdx ? 'col-next' : i < nextRoundIdx ? 'col-past' : '';
+          tbody += `<td class="${cls}">${rsvpCell((row[col] || '').trim())}</td>`;
+        });
         if (champCol > 0) tbody += `<td class="col-champ-cell">${rsvpCell((row[champCol] || '').trim())}</td>`;
         tbody += '</tr>';
       });
@@ -1728,8 +1875,12 @@
         const label = (frow[2] || '').trim();
         if (!label) return;
         const cls = label.toLowerCase().includes('yes') ? 'count-yes' : label.toLowerCase().includes('no') ? 'count-no' : 'count-open';
-        tfoot += `<tr><td></td><td class="col-player ${cls}">${label}</td>`;
-        roundCols.forEach(col => { tfoot += `<td class="${cls}">${(frow[col] || '').trim() || '—'}</td>`; });
+        tfoot += `<tr><td class="col-player ${cls}">${label}</td>`;
+        orderedIdxs.forEach(i => {
+          const col = roundCols[i];
+          const nextCls = i === nextRoundIdx ? 'col-next' : i < nextRoundIdx ? 'col-past' : '';
+          tfoot += `<td class="${cls} ${nextCls}">${(frow[col] || '').trim() || '—'}</td>`;
+        });
         if (champCol > 0) tfoot += `<td class="${cls} col-champ-cell">${(frow[champCol] || '').trim() || '—'}</td>`;
         tfoot += '</tr>';
       });
