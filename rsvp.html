@@ -1478,7 +1478,7 @@
       const rsvp = (sheetCol !== undefined ? (row[sheetCol] || '') : '').trim().toLowerCase();
       if (rsvp === 'yes') attending.push(name);
       else if (rsvp === 'no') notAttending.push(name);
-      else pending.push(name);
+      else pending.push({ name, status: rsvp === 'ttd' ? 'ttd' : 'blank' });
     });
 
     return {
@@ -1507,14 +1507,14 @@
     // Wait for every player to mark Yes or No before unlocking pairings
     if (!allResponded) {
       const pendingListHtml = pending.length > 0
-        ? pending.map(name => `<span class="pairings-pending-chip">${name}</span>`).join('')
+        ? pending.map(entry => `<span class="pairings-pending-chip">${entry.name}${entry.status === 'ttd' ? ' · TTD' : ' · no response'}</span>`).join('')
         : '<span class="pairings-pending-chip">No pending names found</span>';
 
       wrap.innerHTML = `
         <div class="pairings-locked">
           <div class="pairings-lock-icon"><i class="fas fa-lock"></i></div>
           <h3>Waiting for all RSVPs</h3>
-          <p>Pairings unlock once everyone has responded <strong>Yes</strong> or <strong>No</strong> for <strong>${ROUND_DATES[nextRoundIdx]}</strong>.</p>
+          <p>Pairings unlock once everyone has responded <strong>Yes</strong> or <strong>No</strong> for <strong>${ROUND_DATES[nextRoundIdx]}</strong>. Players marked <strong>TTD</strong> or with no response still need to update their RSVP.</p>
           <div class="pairings-lock-meta">
             <i class="fas fa-calendar-alt"></i> Next round: <strong>${ROUND_DATES[nextRoundIdx]}</strong>
           </div>
