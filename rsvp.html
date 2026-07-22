@@ -589,9 +589,44 @@
       border: 1px solid var(--border);
       border-radius: 2px;
       padding: 0.35rem 0.85rem;
+      margin-bottom: 1.25rem;
     }
     .pairings-lock-meta i { color: var(--gold-muted); }
     .pairings-lock-meta strong { color: var(--cream); }
+    .pairings-pending-list {
+      margin: 1.5rem auto 0;
+      max-width: 520px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.03);
+      padding: 1rem 1.1rem;
+    }
+    .pairings-pending-title {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--gold-muted);
+      margin-bottom: 0.7rem;
+    }
+    .pairings-pending-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+    }
+    .pairings-pending-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.3rem 0.6rem;
+      border-radius: 2px;
+      font-size: 0.76rem;
+      background: rgba(230,160,20,0.12);
+      border: 1px solid rgba(230,160,20,0.2);
+      color: #e8b84a;
+    }
 
     /* ── Premium upsell ── */
     .premium-divider {
@@ -1429,36 +1464,29 @@
     return groups;
   }
 
-  // ── Pairings time gate: only visible from noon ET on Friday ────
-  function pairingsUnlocked() {
-    // Convert current time to US Eastern (handles EST/EDT automatically)
-    const now = new Date();
-    const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
-    const et = new Date(etStr);
-    const dayOfWeek = et.getDay();   // 0=Sun … 5=Fri … 6=Sat
-    const hour = et.getHours();
-    const minute = et.getMinutes();
-    // Unlock: Friday (5) at or after 12:00 PM, through end of Saturday (6)
-    if (dayOfWeek === 5 && (hour > 12 || (hour === 12 && minute >= 0))) return true;
-    if (dayOfWeek === 6) return true;
-    return false;
-  }
+  // ── Pairings unlock gate: wait for everyone to mark Yes or No ────
+  function getNextRoundResponseState(playerRows, roundCols, nextRoundIdx) {
+    const attending = [];
+    const notAttending = [];
+    const pending = [];
+    const sheetCol = roundCols[nextRoundIdx];
 
-  function minutesUntilUnlock() {
-    const now = new Date();
-    const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
-    const et = new Date(etStr);
-    // Find next Friday noon ET
-    const day = et.getDay();
-    let daysUntilFri = (5 - day + 7) % 7;
-    if (day === 5 && (et.getHours() < 12)) daysUntilFri = 0; // same Friday, not yet noon
-    if (day === 5 && et.getHours() >= 12) daysUntilFri = 7;  // already past, next Friday
-    if (day === 6) daysUntilFri = 6; // Saturday, next Friday
+    playerRows.forEach(row => {
+      const name = (row[2] || '').trim();
+      if (!name) return;
 
-    const nextFriNoon = new Date(et);
-    nextFriNoon.setDate(et.getDate() + daysUntilFri);
-    nextFriNoon.setHours(12, 0, 0, 0);
-    return Math.ceil((nextFriNoon - et) / 60000);
+      const rsvp = (sheetCol !== undefined ? (row[sheetCol] || '') : '').trim().toLowerCase();
+      if (rsvp === 'yes') attending.push(name);
+      else if (rsvp === 'no') notAttending.push(name);
+      else pending.push(name);
+    });
+
+    return {
+      attending,
+      notAttending,
+      pending,
+      allResponded: pending.length === 0
+    };
   }
 
   // ── Render pairings ────────────────────────────────────────────
@@ -1473,156 +1501,159 @@
       return;
     }
 
-    // ── Time gate: show placeholder before noon ET on Friday ──────
-    if (!pairingsUnlocked()) {
-      const mins = minutesUntilUnlock();
-      const hrs  = Math.floor(mins / 60);
-      const rem  = mins % 60;
-      const eta  = hrs > 0
-        ? `${hrs}h ${rem}m`
-        : `${rem} minute${rem !== 1 ? 's' : ''}`;
+    const responseState = getNextRoundResponseState(playerRows, roundCols, nextRoundIdx);
+    const { attending, notAttending, pending, allResponded } = responseState;
 
-      const nums = [1,2,3,4,5,6,7,8,9,10];
+    // Wait for every player to mark Yes or No before unlocking pairings
+    if (!allResponded) {
+      const pendingListHtml = pending.length > 0
+        ? pending.map(name => `<span class="pairings-pending-chip">${name}</span>`).join('')
+        : '<span class="pairings-pending-chip">No pending names found</span>';
+
       wrap.innerHTML = `
         <div class="pairings-locked">
           <div class="pairings-lock-icon"><i class="fas fa-lock"></i></div>
-          <h3>Pairings drop Friday at noon</h3>
-          <p>Check back in <strong>${eta}</strong> — pairings are posted each Friday at 12:00 PM Eastern once the RSVP list is confirmed.</p>
+          <h3>Waiting for all RSVPs</h3>
+          <p>Pairings unlock once everyone has responded <strong>Yes</strong> or <strong>No</strong> for <strong>${ROUND_DATES[nextRoundIdx]}</strong>.</p>
           <div class="pairings-lock-meta">
             <i class="fas fa-calendar-alt"></i> Next round: <strong>${ROUND_DATES[nextRoundIdx]}</strong>
           </div>
-
-          <div class="lock-game">
-            <div class="lock-game-label">Early access code</div>
-            <div class="lock-game-hint">Guess the number between 1 and 10 to unlock pairings early.</div>
-            <div class="lock-game-inputs">
-              ${nums.map(n => `<button class="lock-num-btn" onclick="trollGuess(this, ${n})">${n}</button>`).join('')}
-            </div>
-            <div class="lock-game-result" id="lock-game-result">&nbsp;</div>
-          </div>
-
-          <div class="premium-divider"><span>or</span></div>
-
-          <div class="premium-section">
-            <div class="premium-eyebrow"><i class="fas fa-crown"></i> OWGA INSIDER</div>
-            <div class="premium-headline">Get Early Pairing Access</div>
-            <div class="premium-sub">Join thousands of OWGA members who refuse to wait until noon like a normal person.</div>
-
-            <div class="premium-plans">
-
-              <div class="premium-plan">
-                <div class="plan-name">Starter</div>
-                <div class="plan-price">$4<span class="plan-per">/week</span></div>
-                <div class="plan-desc">Pairings 11 minutes early. You'll still probably be late to the tee.</div>
-                <ul class="plan-perks">
-                  <li><i class="fas fa-check"></i> Pairings at 11:49 AM</li>
-                  <li><i class="fas fa-check"></i> Standard font size</li>
-                  <li><i class="fas fa-times perk-no"></i> Who your partner is</li>
-                  <li><i class="fas fa-times perk-no"></i> Tee time</li>
-                </ul>
-                <button class="plan-btn" onclick="openPayModal('Starter','$4/week')">Subscribe</button>
-              </div>
-
-              <div class="premium-plan plan-featured">
-                <div class="plan-badge">MOST POPULAR</div>
-                <div class="plan-name">Pro</div>
-                <div class="plan-price">$29<span class="plan-per">/round</span></div>
-                <div class="plan-desc">Same price as green fees. But this one is for knowing who you're playing with.</div>
-                <ul class="plan-perks">
-                  <li><i class="fas fa-check"></i> Pairings at noon (same as free)</li>
-                  <li><i class="fas fa-check"></i> Bold player names</li>
-                  <li><i class="fas fa-check"></i> Your name, highlighted</li>
-                  <li><i class="fas fa-check"></i> Priority disappointment</li>
-                </ul>
-                <button class="plan-btn plan-btn-gold" onclick="openPayModal('Pro','$29/round')">Subscribe</button>
-              </div>
-
-              <div class="premium-plan">
-                <div class="plan-name">Elite</div>
-                <div class="plan-price">$100<span class="plan-per">/season</span></div>
-                <div class="plan-desc">The same as your league fee. Doubles your total investment for the privilege of knowing who you're scrambling with.</div>
-                <ul class="plan-perks">
-                  <li><i class="fas fa-check"></i> Everything in Pro</li>
-                  <li><i class="fas fa-check"></i> Pairings engraved on a rock</li>
-                  <li><i class="fas fa-check"></i> Personal apology from Brad</li>
-                  <li><i class="fas fa-check"></i> Still locked until noon</li>
-                </ul>
-                <button class="plan-btn" onclick="openPayModal('Elite','$100/season')">Subscribe</button>
-              </div>
-
-            </div>
-
-            <div class="premium-fine-print">
-              * All plans auto-renew forever. Cancel anytime by mailing a handwritten letter to Indian Ridge Golf Club, Attn: Pairings Department.
-              Refunds processed within 6–8 business decades. OWGA Insider is not affiliated with the OWGA, golf, or any concept of fairness.
-            </div>
-          </div>
-        </div>
-
-        <!-- Payment Modal -->
-        <div class="pay-modal-overlay" id="pay-modal" onclick="closePayModal(event)">
-          <div class="pay-modal">
-            <button class="pay-modal-close" onclick="closePayModalBtn()"><i class="fas fa-times"></i></button>
-            <div class="pay-modal-header">
-              <i class="fas fa-lock" style="color:var(--gold-muted);font-size:1rem;margin-right:0.5rem;"></i>
-              Secure Checkout
-            </div>
-            <div class="pay-modal-plan" id="pay-modal-plan">Pro — $29/round</div>
-
-            <div class="pay-field-group">
-              <label class="pay-label">Cardholder Name</label>
-              <input class="pay-input" type="text" placeholder="e.g. Dave Eads">
-            </div>
-            <div class="pay-field-group">
-              <label class="pay-label">Card Number</label>
-              <input class="pay-input" type="text" placeholder="4242 4242 4242 4242" maxlength="19">
-            </div>
-            <div class="pay-field-row">
-              <div class="pay-field-group">
-                <label class="pay-label">Expiry</label>
-                <input class="pay-input" type="text" placeholder="MM / YY" maxlength="7">
-              </div>
-              <div class="pay-field-group">
-                <label class="pay-label">CVC</label>
-                <input class="pay-input" type="text" placeholder="•••" maxlength="3">
-              </div>
-            </div>
-            <div class="pay-field-group">
-              <label class="pay-label">Blood Type <span style="color:var(--muted);font-weight:400;">(required for Elite tier)</span></label>
-              <input class="pay-input" type="text" placeholder="O+, A-, etc.">
-            </div>
-
-            <button class="pay-submit" id="pay-submit-btn" onclick="submitPayment()">
-              <i class="fas fa-lock" style="font-size:0.8rem;"></i> Pay Now
-            </button>
-            <div class="pay-decline" id="pay-decline" style="display:none;">
-              <i class="fas fa-exclamation-circle"></i> Payment declined. Your card has been flagged for attempting to pay for golf pairings.
-            </div>
-            <div class="pay-secure-note">
-              <i class="fas fa-shield-alt"></i> 256-bit encryption &nbsp;·&nbsp; <i class="fas fa-eye-slash"></i> We definitely won't share your data &nbsp;·&nbsp; <i class="fas fa-certificate"></i> SOC 2 Pending
-            </div>
+          <div class="pairings-pending-list">
+            <div class="pairings-pending-title">Still waiting on ${pending.length} player${pending.length === 1 ? '' : 's'}</div>
+            <div class="pairings-pending-chips">${pendingListHtml}</div>
           </div>
         </div>
       `;
 
-      // Auto-refresh every minute so the countdown stays live
       setTimeout(() => renderPairings(playerRows, roundCols), 60000);
       return;
     }
 
     const roundDate  = ROUND_DATES[nextRoundIdx];
     const roundLabel = ROUND_LABELS[nextRoundIdx];
-    const sheetCol   = roundCols[nextRoundIdx];
 
-    // Determine attendance
-    const attending = [], notAttending = [];
-    playerRows.forEach(row => {
-      const name = (row[2] || '').trim();
-      if (!name) return;
-      const rsvp = (sheetCol !== undefined ? (row[sheetCol] || '') : '').trim().toLowerCase();
-      if (rsvp === 'no' || rsvp === 'ttd') notAttending.push(name);
-      else attending.push(name);
+    const scoresData = await fetchScores();
+    const pairs  = buildPairings(attending, scoresData);
+    const groups = assignTeeGroups(pairs);
+    const isOdd  = attending.length % 2 === 1;
+
+    // ── Build HTML ──────────────────────────────────────────────
+    let html = `
+      <div class="pairings-header">
+        <div>
+          <span class="section-label">Upcoming Round</span>
+          <h2>${roundLabel} — Tee Times &amp; Pairings</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <span class="pairings-round-tag">${roundDate} &bull; First tee 5:09 PM</span>
+          <button class="btn-snapshot" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
+            <i class="fas fa-camera"></i> Copy Snapshot
+          </button>
+        </div>
+      </div>
+      <p class="pairings-note">
+        <i class="fas fa-info-circle"></i>
+        Paired best-to-worst by adj. avg then season rank. Groups randomized.
+        Pairings unlock once everyone has responded Yes or No.${isOdd ? ' <strong style="color:#e8b84a;">Odd number attending — solo player plays 2 balls.</strong>' : ''}
+      </p>
+      <div class="tee-groups" id="tee-groups-capture">`;
+
+    groups.forEach((groupPairs, gi) => {
+      const teeTime = teeTimeStr(gi);
+
+      // Count actual players in this group (rotation slot has 0 players)
+      const playerCount = groupPairs.reduce((sum, p) => sum + p.players.length, 0);
+      const pairCount   = groupPairs.length;
+
+      html += `
+        <div class="tee-group">
+          <div class="tee-group-header">
+            <span class="tee-time-badge">${teeTime}</span>
+            <div class="tee-group-divider"></div>
+            <span class="tee-group-label">Tee ${gi + 1}</span>
+            <span class="tee-group-count">${pairCount} pair${pairCount !== 1 ? 's' : ''} · ${playerCount} player${playerCount !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="tee-group-pairs">`;
+
+      groupPairs.forEach((pair, pi) => {
+        const { players, type } = pair;
+        const isRotation = type === 'rotation';
+        const isOddOut   = type === 'oddout';
+
+        const pairLabel = isRotation
+          ? `⚑ Rotation`
+          : isOddOut
+          ? `⚑ Solo — 2 balls`
+          : `Pair ${pi + 1}`;
+
+        html += `<div class="tee-pair${(isRotation || isOddOut) ? ' solo-pair' : ''}">
+          <div class="tee-pair-label">${pairLabel}</div>
+          <div class="tee-pair-players">`;
+
+        players.forEach((player, pli) => {
+          const { name, avg, seasonRank } = player;
+          const tier    = TIER_MAP[name] || 'A';
+          const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
+          const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
+          html += `<div class="tee-player">
+            <span class="tp-stat">${statStr}</span>
+            <span class="tp-name">${name}</span>
+            <span class="tp-tier ${tierCls}">${tier}</span>
+          </div>`;
+          if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
+        });
+
+        html += `</div>`;
+
+        if (isRotation) {
+          const anchor = pair.rotationAnchor || '';
+          html += `<div class="solo-rotation-note">Tees off alone · rotates Minges / Creelman / Tracy · <strong style="color:#e8c060;">${anchor}</strong> this round</div>`;
+        } else if (isOddOut) {
+          html += `<div class="solo-rotation-note">Plays 2 balls this round</div>`;
+        }
+
+        html += `</div>`; // close tee-pair
+      });
+
+      html += `</div></div>`; // close tee-group-pairs, tee-group
     });
+
+    html += `</div>`; // close tee-groups
+
+    // ── Attending / not attending summary ──────────────────────
+    const allSorted = pairs.filter(p => p.type !== 'rotation').flatMap(p => p.players);
+    html += `
+      <div class="attending-list">
+        <div class="attending-list-title">
+          <i class="fas fa-check-circle" style="color:#72d48a;margin-right:0.3rem;"></i>
+          Attending (${attending.length})
+        </div>
+        <div class="attending-chips">`;
+    allSorted.forEach(player => {
+      const label = player.avg !== null ? player.avg.toFixed(2) : `#${player.seasonRank}`;
+      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}</span>`;
+    });
+    html += `</div>`;
+
+    if (notAttending.length > 0) {
+      html += `
+        <div class="attending-list-title" style="margin-top:1rem;">
+          <i class="fas fa-times-circle" style="color:#e07878;margin-right:0.3rem;"></i>
+          Not attending (${notAttending.length})
+        </div>
+        <div class="attending-chips">`;
+      notAttending.forEach(name => {
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `</div>`;
+    wrap.innerHTML = html;
+  }
+
+  // ── Main load ──────────────────────────────────────────────────
+  async function loadRSVP() {
 
     const scoresData = await fetchScores();
     const pairs  = buildPairings(attending, scoresData);
