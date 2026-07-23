@@ -1195,6 +1195,9 @@
     'Rd 1','Rd 2','Rd 3','Rd 4','Rd 5','Rd 6','Rd 7',
     'Rd 8','Rd 9','Rd 10','Rd 11','Rd 12','Rd 13','Rd 14'
   ];
+  // TEMP JOKE: hide the final two regular-season rounds from the public site.
+  // Underlying sheet columns/data remain untouched. Revert to ROUND_DATES.length when done.
+  const PUBLIC_ROUNDS = 12;
 
   // Season rank from prior year — drives pairing order
   // Rank 1 = best (pairs with last), rank 22 = lowest (pairs with first)
@@ -1810,6 +1813,8 @@
       const roundCols = [];
       const endCol = champCol > 0 ? champCol : headerRow.length;
       for (let c = 3; c < endCol; c++) roundCols.push(c);
+      // Public-only visibility cap; does not delete or alter sheet data.
+      roundCols.splice(PUBLIC_ROUNDS);
 
       // Split player vs footer rows
       const playerRows = [], footerRows = [];

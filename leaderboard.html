@@ -561,6 +561,9 @@
     // ── CONFIG ─────────────────────────────────────────────────────
     const ADMIN_PASSWORD = 'owga2026';
     const TOTAL_WEEKS = 14;
+    // TEMP JOKE: only expose the first 12 regular-season rounds publicly.
+    // Revert by setting PUBLIC_WEEKS = TOTAL_WEEKS (or removing this override).
+    const PUBLIC_WEEKS = 12;
     const BEST_N = 6;
     const SEASON_YEAR = '2026';
 
@@ -682,7 +685,7 @@
       await fetchScores();
       const data = loadData();
       const rows = PLAYERS.map(name => {
-        const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
+        const scores = Array.from({ length: PUBLIC_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
         const calc = calcPlayer(name, scores);
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), ...calc };
       });
@@ -729,11 +732,11 @@
         tbody.appendChild(tr);
       });
 
-      const weeksWithData = Array.from({ length: TOTAL_WEEKS }, (_, i) =>
+      const weeksWithData = Array.from({ length: PUBLIC_WEEKS }, (_, i) =>
         PLAYERS.some(p => (data[p]?.[i] ?? 0) > 0)
       ).filter(Boolean).length;
       document.getElementById('rounds-played-label').textContent =
-        weeksWithData > 0 ? `${weeksWithData} of ${TOTAL_WEEKS} rounds played` : 'Season not yet started';
+        weeksWithData > 0 ? `${weeksWithData} of ${PUBLIC_WEEKS} rounds played` : 'Season not yet started';
     }
 
     // ── RENDER WEEKLY TABLE ────────────────────────────────────────
@@ -742,7 +745,7 @@
       const data = loadData();
 
       let lastWeek = -1;
-      for (let w = TOTAL_WEEKS - 1; w >= 0; w--) {
+      for (let w = PUBLIC_WEEKS - 1; w >= 0; w--) {
         if (PLAYERS.some(p => (data[p]?.[w] ?? 0) > 0)) { lastWeek = w; break; }
       }
 
@@ -755,7 +758,7 @@
       thead.innerHTML = headerHTML;
 
       const rows = PLAYERS.map(name => {
-        const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
+        const scores = Array.from({ length: PUBLIC_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
         const calc = calcPlayer(name, scores);
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), scores, ...calc };
       }).sort((a, b) => {
