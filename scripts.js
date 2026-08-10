@@ -84,6 +84,8 @@ function initChampionsCarousel() {
 
 function initPlayersSection() {
   // Updated 2025 player roster from screenshot
+  // Dave Eads and Cody Vatter are inactive (haven't played this season) — omitted here.
+  // To bring either back, just re-add their entry.
   const players = [
     { name: "AJ Meyer",        joined: 2018 },
     { name: "Andrew Meyer",    joined: 2017 },
@@ -91,11 +93,9 @@ function initPlayersSection() {
     { name: "Brian Creelman",  joined: 2016 },
     { name: "Bruce Tedesco",   joined: 2014 },
     { name: "Christian Tracy", joined: 2024 },
-    { name: "Cody Vatter",     joined: 2019 },
     { name: "Dan Heitman",     joined: 2016 },
     { name: "Dan Hirsch",      joined: 2024 },
     { name: "Daniel Tracy",    joined: 2015 },
-    { name: "Dave Eads",       joined: 2014 },
     { name: "Dave Tracy",      joined: 2013 },
     { name: "Hobie Bolton",    joined: 2017 },
     { name: "James Nelson",    joined: 2018 },

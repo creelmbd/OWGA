@@ -559,7 +559,7 @@
             <span class="tier-letter b">B</span>
             <div>
               <div style="font-family:var(--sans);font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#999;">Tier B — Mid Seeds</div>
-              <div class="tier-section-meta"><strong style="color:#b0b0b0;">−1 stroke per round</strong> · Ranks 4–15</div>
+              <div class="tier-section-meta"><strong style="color:#b0b0b0;">−1 stroke per round</strong> · Ranks 4–14</div>
             </div>
           </div>
           <div class="tier-players-grid">
@@ -571,10 +571,9 @@
             <div class="tier-player-row tb"><span class="tier-rank-num">9</span><span class="tier-player-name">Bruce Tedesco</span><span class="tier-handicap hcp-b">−1</span></div>
             <div class="tier-player-row tb"><span class="tier-rank-num">10</span><span class="tier-player-name">Dave Tracy</span><span class="tier-handicap hcp-b">−1</span></div>
             <div class="tier-player-row tb"><span class="tier-rank-num">11</span><span class="tier-player-name">Hobie Bolton</span><span class="tier-handicap hcp-b">−1</span></div>
-            <div class="tier-player-row tb"><span class="tier-rank-num">12</span><span class="tier-player-name">Cody Vatter</span><span class="tier-handicap hcp-b">−1</span></div>
-            <div class="tier-player-row tb"><span class="tier-rank-num">13</span><span class="tier-player-name">James Nelson</span><span class="tier-handicap hcp-b">−1</span></div>
-            <div class="tier-player-row tb"><span class="tier-rank-num">14</span><span class="tier-player-name">Mike Tracy</span><span class="tier-handicap hcp-b">−1</span></div>
-            <div class="tier-player-row tb"><span class="tier-rank-num">15</span><span class="tier-player-name">Dan Heitman</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">12</span><span class="tier-player-name">James Nelson</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">13</span><span class="tier-player-name">Mike Tracy</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">14</span><span class="tier-player-name">Dan Heitman</span><span class="tier-handicap hcp-b">−1</span></div>
           </div>
         </div>
 
@@ -583,17 +582,16 @@
             <span class="tier-letter c">C</span>
             <div>
               <div style="font-family:var(--sans);font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#c07848;">Tier C — Lower Seeds</div>
-              <div class="tier-section-meta"><strong style="color:#c07848;">−2 strokes per round</strong> · Ranks 16–22</div>
+              <div class="tier-section-meta"><strong style="color:#c07848;">−2 strokes per round</strong> · Ranks 15–20</div>
             </div>
           </div>
           <div class="tier-players-grid">
-            <div class="tier-player-row tc"><span class="tier-rank-num">16</span><span class="tier-player-name">AJ Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">17</span><span class="tier-player-name">Andrew Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">18</span><span class="tier-player-name">Dan Hirsch</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">19</span><span class="tier-player-name">Daniel Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">20</span><span class="tier-player-name">Dave Eads</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">21</span><span class="tier-player-name">Josh McConnell</span><span class="tier-handicap hcp-c">−2</span></div>
-            <div class="tier-player-row tc"><span class="tier-rank-num">22</span><span class="tier-player-name">Christian Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">15</span><span class="tier-player-name">AJ Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">16</span><span class="tier-player-name">Andrew Meyer</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">17</span><span class="tier-player-name">Dan Hirsch</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">18</span><span class="tier-player-name">Daniel Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">19</span><span class="tier-player-name">Josh McConnell</span><span class="tier-handicap hcp-c">−2</span></div>
+            <div class="tier-player-row tc"><span class="tier-rank-num">20</span><span class="tier-player-name">Christian Tracy</span><span class="tier-handicap hcp-c">−2</span></div>
           </div>
         </div>
       </div>
@@ -719,13 +717,20 @@ const BEST_N = 6;
     // even if the flag doesn't sync to other viewers.
     const LOCAL_RAINOUT_KEY = 'owga_rainout_weeks_2026';
 
-    const PLAYERS = [
+    // Players who haven't been playing this season — kept out of every roster-driven
+    // view (Standings, Weekly Scores, Admin editor, Championship editor) without
+    // deleting their historical scores or tier/rank data. To bring someone back,
+    // just remove their name here.
+    const HIDDEN_PLAYERS = new Set(['Dave Eads', 'Cody Vatter']);
+
+    const ALL_PLAYERS = [
       'AJ Meyer','Andrew Meyer','Brad Minges','Brian Creelman','Bruce Tedesco',
       'Christian Tracy','Cody Vatter','Dan Heitman','Dan Hirsch','Daniel Tracy',
       'Dave Eads','Dave Tracy','Hobie Bolton','James Nelson','Joe McConnell',
       'Joey Jacobs','Josh McConnell','Mike Tracy','Randy Bulach','Steve Griffin',
       'Tony Bulach','Zak Curry'
     ];
+    const PLAYERS = ALL_PLAYERS.filter(name => !HIDDEN_PLAYERS.has(name));
 
     const WEEK_DATES = [
       'May 22','May 29','Jun 5','Jun 12','Jun 19','Jun 26',
@@ -738,11 +743,12 @@ const BEST_N = 6;
       'Brad Minges': 1, 'Randy Bulach': 2, 'Zak Curry': 3,
       'Steve Griffin': 4, 'Joe McConnell': 5, 'Tony Bulach': 6,
       'Joey Jacobs': 7, 'Brian Creelman': 8, 'Bruce Tedesco': 9,
-      'Dave Tracy': 10, 'Hobie Bolton': 11, 'Cody Vatter': 12,
-      'James Nelson': 13, 'Mike Tracy': 14, 'Dan Heitman': 15,
-      'AJ Meyer': 16, 'Andrew Meyer': 17, 'Dan Hirsch': 18,
-      'Daniel Tracy': 19, 'Dave Eads': 20, 'Josh McConnell': 21,
-      'Christian Tracy': 22
+      'Dave Tracy': 10, 'Hobie Bolton': 11, 'James Nelson': 12,
+      'Mike Tracy': 13, 'Dan Heitman': 14,
+      'AJ Meyer': 15, 'Andrew Meyer': 16, 'Dan Hirsch': 17,
+      'Daniel Tracy': 18, 'Josh McConnell': 19, 'Christian Tracy': 20,
+      // Inactive (hidden) players — ranked last rather than left mid-pack
+      'Cody Vatter': 21, 'Dave Eads': 22
     };
 
     function getSeasonRank(name) { return SEASON_RANK[name] ?? 99; }

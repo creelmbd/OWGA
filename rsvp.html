@@ -1198,17 +1198,23 @@
     'Rd 1','Rd 2','Rd 3','Rd 4','Rd 5','Rd 6','Rd 7',
     'Rd 8','Rd 9','Rd 10','Rd 11','Rd 12','Rd 13','Rd 14'
   ];
-// Season rank from prior year — drives pairing order
+// Players who haven't been playing this season — filtered out of the roster read
+  // from the RSVP sheet below, without touching their rows in the sheet itself.
+  // To bring someone back, just remove their name here.
+  const HIDDEN_PLAYERS = new Set(['Dave Eads', 'Cody Vatter']);
+
+  // Season rank from prior year — drives pairing order
   // Rank 1 = best (pairs with last), rank 22 = lowest (pairs with first)
   const SEASON_RANK = {
     'Brad Minges': 1,    'Randy Bulach': 2,    'Zak Curry': 3,
     'Steve Griffin': 4,  'Joe McConnell': 5,   'Tony Bulach': 6,
     'Joey Jacobs': 7,    'Brian Creelman': 8,  'Bruce Tedesco': 9,
-    'Dave Tracy': 10,    'Hobie Bolton': 11,   'Cody Vatter': 12,
-    'James Nelson': 13,  'Mike Tracy': 14,     'Dan Heitman': 15,
-    'AJ Meyer': 16,      'Andrew Meyer': 17,   'Dan Hirsch': 18,
-    'Daniel Tracy': 19,  'Dave Eads': 20,      'Josh McConnell': 21,
-    'Christian Tracy': 22
+    'Dave Tracy': 10,    'Hobie Bolton': 11,   'James Nelson': 12,
+    'Mike Tracy': 13,    'Dan Heitman': 14,
+    'AJ Meyer': 15,      'Andrew Meyer': 16,   'Dan Hirsch': 17,
+    'Daniel Tracy': 18,  'Josh McConnell': 19, 'Christian Tracy': 20,
+    // Inactive (hidden) players — ranked last rather than left mid-pack
+    'Cody Vatter': 21,   'Dave Eads': 22
   };
 
   const TIER_MAP = {
@@ -1824,7 +1830,7 @@
           inFooter = true;
         }
         if (inFooter) { if (nameCell) footerRows.push(rows[r]); }
-        else          { if (nameCell) playerRows.push(rows[r]); }
+        else          { if (nameCell && !HIDDEN_PLAYERS.has(nameCell)) playerRows.push(rows[r]); }
       }
 
       // Render pairings (uses same parsed data)
