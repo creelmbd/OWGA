@@ -103,10 +103,15 @@
 
     .sc { display: inline-block; min-width: 28px; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.78rem; }
     .sc-counted { background: rgba(201,168,76,0.1); color: var(--gold-pale); }
-    .sc-dropped { background: rgba(230,130,20,0.2); color: #f0a830; font-weight: 600; }
-    .sc-best   { background: rgba(60,160,80,0.18); color: #72d48a; font-weight: 600; }
+    .sc-dropped { color: #ff9d70; font-weight: 700; }
+    .sc-best   { color: #3ddc6a; font-weight: 700; }
     .sc-zero   { color: var(--muted); }
     .sc-empty  { color: rgba(255,255,255,0.1); }
+    .sc-rainout { background: rgba(70,130,220,0.28); color: #8db4f0; font-weight: 600; }
+    .th-rainout { background: rgba(70,130,220,0.18) !important; color: #8db4f0 !important; }
+    .td-rainout { background: rgba(70,130,220,0.08) !important; }
+    .td-best    { background: rgba(12,163,12,0.2) !important; }
+    .td-dropped { background: rgba(236,131,90,0.22) !important; }
 
     /* Two-line score cell: raw on top, adj below */
     .sc-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 0.1rem; }
@@ -210,6 +215,15 @@
     .score-row input:focus { border-color: var(--gold-muted); }
     .score-row input.has-score { border-color: rgba(201,168,76,0.3); }
 
+    .rainout-row {
+      background: rgba(70,130,220,0.08); border: 1px solid rgba(70,130,220,0.35);
+      border-radius: var(--radius); padding: 0.75rem 1rem; margin-bottom: 1.5rem;
+    }
+    .rainout-check { display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem; color: var(--cream); cursor: pointer; }
+    .rainout-check input { width: 16px; height: 16px; accent-color: #4d84d6; cursor: pointer; }
+    .rainout-check i { color: #8db4f0; }
+    .grid-disabled { opacity: 0.45; pointer-events: none; }
+
     .save-bar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 1rem 1.25rem; background: var(--navy-card);
@@ -312,6 +326,110 @@
     }
     .tier-handicap.hcp-b { color: #9ab0c8; }
     .tier-handicap.hcp-c { color: #c09060; }
+
+    /* Clickable player names */
+    .player-name-link, .player-name-cell {
+      cursor: pointer; transition: color 0.15s;
+    }
+    .player-name-cell:hover, td.left.player-name-link:hover {
+      color: var(--gold-bright); text-decoration: underline; text-decoration-color: rgba(201,168,76,0.4);
+    }
+
+    /* Player stat card modal */
+    .player-modal-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 100;
+      background: rgba(5,8,16,0.78); backdrop-filter: blur(3px);
+      align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .player-modal-backdrop.active { display: flex; }
+    .player-modal {
+      position: relative; width: 100%; max-width: 640px; max-height: 85vh; overflow-y: auto;
+      background: var(--navy-card); border: 1px solid var(--border-strong);
+      border-radius: var(--radius); box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .pm-topbar { height: 5px; background: linear-gradient(90deg, var(--gold-muted), var(--gold-bright) 50%, var(--gold-muted)); }
+    .pm-topbar.tier-b { background: linear-gradient(90deg, #6f6f6f, #c7c7c7 50%, #6f6f6f); }
+    .pm-topbar.tier-c { background: linear-gradient(90deg, #7a4a28, #d38f5c 50%, #7a4a28); }
+    .player-modal-close {
+      position: absolute; top: 1.1rem; right: 1.1rem; background: rgba(0,0,0,0.25); border: 1px solid var(--border);
+      color: var(--muted); font-size: 0.85rem; cursor: pointer; width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; transition: color 0.15s, border-color 0.15s;
+      z-index: 1;
+    }
+    .player-modal-close:hover { color: var(--cream); border-color: var(--border-strong); }
+
+    .pm-body { padding: 2.25rem 2.25rem 2rem; }
+
+    .pm-header {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
+      margin-bottom: 1.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+    }
+    .pm-name { font-family: var(--serif-display); font-size: 1.85rem; color: var(--white); line-height: 1.15; }
+    .pm-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .pm-sub .dot-sep { opacity: 0.4; }
+    .pm-rank-pill {
+      flex-shrink: 0; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-bright); font-family: var(--sans); font-size: 0.66rem; font-weight: 700;
+      letter-spacing: 0.09em; text-transform: uppercase; padding: 0.4rem 0.75rem;
+      border-radius: 999px; white-space: nowrap; text-align: center;
+    }
+
+    .pm-hero { display: flex; align-items: flex-end; gap: 1rem; margin-bottom: 1.75rem; }
+    .pm-hero-value { font-family: var(--serif-display); font-weight: 700; font-size: 3.1rem; line-height: 1; color: var(--gold-bright); }
+    .pm-hero-meta { padding-bottom: 0.35rem; }
+    .pm-hero-label { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+    .pm-hero-sub { font-size: 0.76rem; color: var(--muted); margin-top: 0.15rem; }
+
+    .pm-stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 0.6rem; margin-bottom: 2rem;
+    }
+    .pm-stat {
+      background: var(--navy); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 0.7rem 0.6rem; text-align: center;
+    }
+    .pm-stat-val { font-family: var(--serif-display); font-size: 1.15rem; color: var(--cream); font-weight: 700; }
+    .pm-stat-label { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+
+    .pm-trend { margin-bottom: 2rem; }
+    .pm-trend-label {
+      font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.6rem;
+    }
+    .pm-trend-chart { width: 100%; }
+    .pm-trend-chart svg { display: block; }
+
+    .pm-rounds-title {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 0.75rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border);
+    }
+    .pm-rounds-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.84rem; }
+    .pm-rounds-table th {
+      text-align: left; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--muted); padding: 0 0.5rem 0.5rem; }
+    .pm-rounds-table th.c, .pm-rounds-table td.c { text-align: center; }
+    .pm-rounds-table th.r, .pm-rounds-table td.r { text-align: right; }
+    .pm-rounds-table td {
+      padding: 0.55rem 0.5rem; color: var(--cream); font-variant-numeric: tabular-nums;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .pm-rounds-table tr:first-child td { border-top: none; }
+    .pm-rounds-table tr.row-best td { background: rgba(12,163,12,0.05); }
+    .pm-rounds-table tr.row-dropped td { background: rgba(236,131,90,0.05); }
+    .pm-rounds-table tr.row-rainout td { background: rgba(70,130,220,0.05); }
+    .pm-rounds-table tr:first-child td:first-child { border-top-left-radius: 6px; }
+    .pm-rounds-table tr:first-child td:last-child { border-top-right-radius: 6px; }
+
+    .pm-status-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem;
+      border-radius: 999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap;
+    }
+    .pm-status-best    { background: rgba(12,163,12,0.18); color: #3ddc6a; }
+    .pm-status-dropped { background: rgba(236,131,90,0.18); color: #ff9d70; }
+    .pm-status-counted { background: rgba(201,168,76,0.12); color: var(--gold-pale); }
+    .pm-status-rainout { background: rgba(70,130,220,0.2); color: #8db4f0; }
+
+    .pm-empty { text-align: center; color: var(--muted); font-style: italic; padding: 2.5rem 0; }
   </style>
 </head>
 <body>
@@ -354,9 +472,9 @@
         </div>
 
         <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted round</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped (over minimum)</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> ✓ Counted round</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(236,131,90,0.4);"></div> ✗ Dropped (over minimum)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(12,163,12,0.35);"></div> ✦ Best round</div>
           <div class="legend-item"><span class="tier-badge tier-a">A</span> No handicap &nbsp;<span class="tier-badge tier-b">B</span> −1/round &nbsp;<span class="tier-badge tier-c">C</span> −2/round</div>
         </div>
 
@@ -376,9 +494,9 @@
           <tbody id="standings-tbody"></tbody>
         </table>
 
-        <p class="section-note">
+        <p class="section-note" id="standings-note">
           <i class="fas fa-info-circle"></i>
-          Standings based on best 6 rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores. Players without 2026 scores are seeded by tier (A: 36, B: 38, C: 40) shown in grey.
+          Standings based on best <span id="best-n-label">6</span> rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores. Players without 2026 scores are seeded by tier (A: 36, B: 38, C: 40) shown in grey.<span id="rainout-note-inline"></span>
         </p>
       </div>
 
@@ -390,9 +508,10 @@
         </div>
 
         <div class="legend">
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> Counted</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(230,130,20,0.25);"></div> Dropped</div>
-          <div class="legend-item"><div class="legend-dot" style="background:rgba(60,160,80,0.2);"></div> Best round</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2);"></div> ✓ Counted</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(236,131,90,0.4);"></div> ✗ Dropped</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(12,163,12,0.35);"></div> ✦ Best round</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(70,130,220,0.35);"></div> Rainout (no play)</div>
           <div class="legend-item" style="color:var(--muted);font-size:0.74rem;">For B/C tiers: raw score shown above adj. score</div>
         </div>
 
@@ -402,6 +521,10 @@
             <tbody id="weekly-tbody"></tbody>
           </table>
         </div>
+        <p class="section-note" id="weekly-rainout-note" style="display:none;">
+          <i class="fas fa-info-circle"></i>
+          <span id="weekly-rainout-note-text"></span>
+        </p>
       </div>
 
       <!-- TIERS -->
@@ -526,9 +649,17 @@
 
           <div class="score-editor-grid" id="score-editor-grid"></div>
 
-          <p class="admin-note">
+          <div class="rainout-row">
+            <label class="rainout-check">
+              <input type="checkbox" id="rainout-checkbox" onchange="toggleRainout()">
+              <i class="fas fa-cloud-showers-heavy"></i>
+              <span>Mark this week as a Rainout (no round played — the 2nd rainout of the season and each one after lowers the minimum counted rounds for everyone)</span>
+            </label>
+          </div>
+
+          <p class="admin-note" id="admin-scoring-note">
             <i class="fas fa-info-circle"></i>
-            Enter raw (unadjusted) scores as played. Tier handicaps (B: −1, C: −2) are applied automatically in standings and weekly views. Best 6 adjusted rounds are counted. Enter 0 or leave blank for absent players.
+            Enter raw (unadjusted) scores as played. Tier handicaps (B: −1, C: −2) are applied automatically in standings and weekly views. Best <span id="admin-best-n-label">6</span> adjusted rounds are counted. Enter 0 or leave blank for absent players. The season starts at a 6-round minimum; the 1st rainout doesn't change it, but every rainout after that lowers the minimum by 1 round (2 total rainouts → 5, 3 total → 4, and so on).
           </p>
 
           <!-- Championship editor -->
@@ -558,6 +689,17 @@
     </div>
   </main>
 
+  <!-- PLAYER STAT CARD -->
+  <div class="player-modal-backdrop" id="player-modal" onclick="if(event.target===this) closePlayerCard()">
+    <div class="player-modal">
+      <div class="pm-topbar" id="pm-topbar"></div>
+      <button class="player-modal-close" onclick="closePlayerCard()" aria-label="Close">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="pm-body" id="player-modal-content"></div>
+    </div>
+  </div>
+
   <div id="footer"></div>
 
   <script>
@@ -566,6 +708,14 @@
     const TOTAL_WEEKS = 14;
 const BEST_N = 6;
     const SEASON_YEAR = '2026';
+
+    // Rainout weeks are stored as a pseudo-player row in the same scores
+    // sheet/payload (key '__RAINOUT__', value 1 for that week's index).
+    const RAINOUT_KEY = '__RAINOUT__';
+    // Local fallback in case the Apps Script backend doesn't round-trip
+    // unrecognized player keys — keeps this browser's admin view correct
+    // even if the flag doesn't sync to other viewers.
+    const LOCAL_RAINOUT_KEY = 'owga_rainout_weeks_2026';
 
     const PLAYERS = [
       'AJ Meyer','Andrew Meyer','Brad Minges','Brian Creelman','Bruce Tedesco',
@@ -625,6 +775,34 @@ const BEST_N = 6;
       return rawScore - getTierHandicap(name);
     }
 
+    // ── RAINOUTS ───────────────────────────────────────────────────
+    function getLocalRainoutOverrides() {
+      try {
+        return JSON.parse(localStorage.getItem(LOCAL_RAINOUT_KEY) || '{}');
+      } catch(e) { return {}; }
+    }
+
+    function setLocalRainoutOverride(week, isRainout) {
+      const overrides = getLocalRainoutOverrides();
+      if (isRainout) overrides[week] = 1; else delete overrides[week];
+      localStorage.setItem(LOCAL_RAINOUT_KEY, JSON.stringify(overrides));
+    }
+
+    // Per-week rainout flags, combining the sheet-synced data with the local fallback.
+    function getRainoutWeeks(data) {
+      const overrides = getLocalRainoutOverrides();
+      return Array.from({ length: TOTAL_WEEKS }, (_, i) =>
+        !!(data[RAINOUT_KEY] && data[RAINOUT_KEY][i]) || !!overrides[i]
+      );
+    }
+
+    // 0-1 rainouts: best 6 count. 2nd rainout drops the minimum to 5 (n-1),
+    // 3rd drops it to 4, continuing by one round per rainout beyond that.
+    function getEffectiveBestN(rainoutCount) {
+      const decrement = rainoutCount > 1 ? rainoutCount - 1 : 0;
+      return Math.max(BEST_N - decrement, 1);
+    }
+
     // ── DATA ───────────────────────────────────────────────────────
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
 
@@ -661,7 +839,7 @@ const BEST_N = 6;
     function loadChampData() { return _champCache || []; }
 
     // ── SCORING LOGIC ──────────────────────────────────────────────
-    function calcPlayer(name, rawScores) {
+    function calcPlayer(name, rawScores, bestN = BEST_N) {
       const hcp = getTierHandicap(name);
       const attended = rawScores
         .map((s, i) => ({ raw: s, score: s > 0 ? s - hcp : 0, week: i }))
@@ -670,7 +848,7 @@ const BEST_N = 6;
       if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null, bestWeek: null, countedWeeks: new Set() };
 
       const sorted = [...attended].sort((a, b) => a.score - b.score);
-      const countedWeeks = new Set(sorted.slice(0, BEST_N).map(x => x.week));
+      const countedWeeks = new Set(sorted.slice(0, bestN).map(x => x.week));
       const best = sorted[0];
       const counted = attended.filter(x => countedWeeks.has(x.week));
       const dropped = attended.filter(x => !countedWeeks.has(x.week));
@@ -681,12 +859,15 @@ const BEST_N = 6;
     }
 
     // ── RENDER STANDINGS ───────────────────────────────────────────
-    async function renderStandings() {
-      await fetchScores();
+    // Shared standings computation \u2014 used by both the Standings tab and the player stat card
+    function computeStandingsRows() {
       const data = loadData();
+      const rainoutWeeks = getRainoutWeeks(data);
+      const rainoutCount = rainoutWeeks.filter(Boolean).length;
+      const effectiveBestN = getEffectiveBestN(rainoutCount);
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
-        const calc = calcPlayer(name, scores);
+        const calc = calcPlayer(name, scores, effectiveBestN);
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), ...calc };
       });
 
@@ -699,23 +880,39 @@ const BEST_N = 6;
         return a.seasonRank - b.seasonRank;
       });
 
-      const tbody = document.getElementById('standings-tbody');
-      tbody.innerHTML = '';
       let rank = 1;
       rows.forEach((row, i) => {
-        const tr = document.createElement('tr');
-        const isTop = rank <= 3 && row.avg !== null;
         if (i > 0 && row.avg !== null && rows[i-1].avg !== null && row.avg === rows[i-1].avg) {
-          // tied
+          // tied \u2014 keep previous rank
         } else if (row.avg !== null) {
           rank = i + 1;
         }
-        const displayRank = row.avg !== null ? rank : '\u2014';
+        row.displayRank = row.avg !== null ? rank : null;
+        row.tied = row.displayRank !== null && (
+          (i > 0 && rows[i-1].avg === row.avg) ||
+          (i < rows.length - 1 && rows[i+1] && rows[i+1].avg === row.avg)
+        );
+      });
+
+      return { rows, effectiveBestN, rainoutCount };
+    }
+
+    async function renderStandings() {
+      await fetchScores();
+      const data = loadData();
+      const { rows, effectiveBestN, rainoutCount } = computeStandingsRows();
+
+      const tbody = document.getElementById('standings-tbody');
+      tbody.innerHTML = '';
+      rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        const isTop = row.displayRank !== null && row.displayRank <= 3;
+        const displayRank = row.displayRank !== null ? row.displayRank : '\u2014';
         const rankClass = isTop ? 'rank-num top' : 'rank-num';
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
-          <td class="player-name-cell">${row.name}</td>
+          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
           <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
           <td class="c stat-muted hide-mobile">${row.seasonRank}</td>
           <td class="r">
@@ -735,31 +932,42 @@ const BEST_N = 6;
       const weeksWithData = Array.from({ length: TOTAL_WEEKS }, (_, i) =>
         PLAYERS.some(p => (data[p]?.[i] ?? 0) > 0)
       ).filter(Boolean).length;
+      const roundsLabel = weeksWithData > 0 ? `${weeksWithData} of ${TOTAL_WEEKS} rounds played` : 'Season not yet started';
       document.getElementById('rounds-played-label').textContent =
-        weeksWithData > 0 ? `${weeksWithData} of ${TOTAL_WEEKS} rounds played` : 'Season not yet started';
+        rainoutCount > 0 ? `${roundsLabel} · ${rainoutCount} rained out` : roundsLabel;
+
+      document.getElementById('best-n-label').textContent = effectiveBestN;
+      document.getElementById('rainout-note-inline').textContent = rainoutCount > 0
+        ? ` ${rainoutCount} week${rainoutCount > 1 ? 's' : ''} rained out this season — the minimum counted rounds has been reduced accordingly.`
+        : '';
     }
 
     // ── RENDER WEEKLY TABLE ────────────────────────────────────────
     async function renderWeekly() {
       await fetchScores();
       const data = loadData();
+      const rainoutWeeks = getRainoutWeeks(data);
+      const rainoutCount = rainoutWeeks.filter(Boolean).length;
+      const effectiveBestN = getEffectiveBestN(rainoutCount);
 
       let lastWeek = -1;
       for (let w = TOTAL_WEEKS - 1; w >= 0; w--) {
-        if (PLAYERS.some(p => (data[p]?.[w] ?? 0) > 0)) { lastWeek = w; break; }
+        if (PLAYERS.some(p => (data[p]?.[w] ?? 0) > 0) || rainoutWeeks[w]) { lastWeek = w; break; }
       }
 
       const thead = document.getElementById('weekly-thead');
       let headerHTML = '<tr><th class="left">Player</th><th class="left" style="padding-left:0.4rem;">Tier</th>';
       for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
-        headerHTML += `<th>Wk ${w+1}<br><span style="font-weight:400;opacity:0.6;font-size:0.58rem;">${WEEK_DATES[w]}</span></th>`;
+        const thCls = rainoutWeeks[w] ? ' class="th-rainout"' : '';
+        const wkLabel = rainoutWeeks[w] ? 'Rainout' : WEEK_DATES[w];
+        headerHTML += `<th${thCls}>Wk ${w+1}<br><span style="font-weight:400;opacity:0.6;font-size:0.58rem;">${wkLabel}</span></th>`;
       }
       headerHTML += '<th>Adj. Avg</th><th>Played</th></tr>';
       thead.innerHTML = headerHTML;
 
       const rows = PLAYERS.map(name => {
         const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
-        const calc = calcPlayer(name, scores);
+        const calc = calcPlayer(name, scores, effectiveBestN);
         return { name, tier: getPlayerTier(name), seasonRank: getSeasonRank(name), priorAvg: getPriorAvg(name), scores, ...calc };
       }).sort((a, b) => {
         const aAvg = a.avg !== null ? a.avg : (a.priorAvg !== null ? a.priorAvg + 1000 : 9999);
@@ -777,22 +985,28 @@ const BEST_N = 6;
         const tr = document.createElement('tr');
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
         const hcp = getTierHandicap(row.name);
-        let cells = `<td class="left">${row.name}</td><td style="padding:0.45rem 0.35rem;"><span class="tier-badge ${tierClass}">${row.tier}</span></td>`;
+        let cells = `<td class="left player-name-link" onclick="openPlayerCard('${row.name}')">${row.name}</td><td style="padding:0.45rem 0.35rem;"><span class="tier-badge ${tierClass}">${row.tier}</span></td>`;
 
         for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
+          if (rainoutWeeks[w]) {
+            cells += `<td class="td-rainout"><span class="sc sc-rainout" title="Rainout — no round played">RO</span></td>`;
+            continue;
+          }
           const raw = row.scores[w];
           const adj = raw > 0 ? raw - hcp : 0;
           let cls = 'sc sc-empty';
+          let tdCls = '';
+          let icon = '';
           if (raw > 0) {
             const isBest = row.bestWeek === w;
             const isDropped = row.dropped.some(d => d.week === w);
-            if (isBest) cls = 'sc sc-best';
-            else if (isDropped) cls = 'sc sc-dropped';
-            else cls = 'sc sc-counted';
+            if (isBest) { cls = 'sc sc-best'; tdCls = 'td-best'; icon = ' ✦'; }
+            else if (isDropped) { cls = 'sc sc-dropped'; tdCls = 'td-dropped'; icon = ' ✗'; }
+            else { cls = 'sc sc-counted'; icon = ' ✓'; }
             if (hcp > 0) {
-              cells += `<td><span class="sc-wrap"><span class="sc-raw">${raw}</span><span class="${cls} sc-adj">${adj}</span></span></td>`;
+              cells += `<td class="${tdCls}"><span class="sc-wrap"><span class="sc-raw">${raw}</span><span class="${cls} sc-adj">${adj}${icon}</span></span></td>`;
             } else {
-              cells += `<td><span class="${cls}">${adj}</span></td>`;
+              cells += `<td class="${tdCls}"><span class="${cls}">${adj}${icon}</span></td>`;
             }
           } else if (raw === 0 && w <= lastWeek) {
             cells += `<td><span class="sc sc-zero">\u2014</span></td>`;
@@ -811,7 +1025,192 @@ const BEST_N = 6;
         tbody.innerHTML = `<tr><td colspan="20" style="text-align:center;padding:3rem;color:var(--muted);font-style:italic;">No rounds recorded yet. Check back after the first Friday match.</td></tr>`;
         thead.innerHTML = '<tr><th class="left">Player</th><th>Tier</th><th>Adj. Avg</th></tr>';
       }
+
+      const rainoutNote = document.getElementById('weekly-rainout-note');
+      if (rainoutCount > 0) {
+        document.getElementById('weekly-rainout-note-text').textContent =
+          `${rainoutCount} week${rainoutCount > 1 ? 's' : ''} rained out this season — best ${effectiveBestN} rounds now count toward the average (reduced from ${BEST_N}).`;
+        rainoutNote.style.display = '';
+      } else {
+        rainoutNote.style.display = 'none';
+      }
     }
+
+    // ── PLAYER STAT CARD ───────────────────────────────────────────
+    function getPlayerCardStats(name) {
+      const data = loadData();
+      const rainoutWeeks = getRainoutWeeks(data);
+      const rainoutCount = rainoutWeeks.filter(Boolean).length;
+      const effectiveBestN = getEffectiveBestN(rainoutCount);
+      const scores = Array.from({ length: TOTAL_WEEKS }, (_, i) => data[name]?.[i] ?? 0);
+      const calc = calcPlayer(name, scores, effectiveBestN);
+      const hcp = getTierHandicap(name);
+      return { name, tier: getPlayerTier(name), hcp, scores, rainoutWeeks, effectiveBestN, ...calc };
+    }
+
+    // Catmull-Rom → cubic Bezier smoothing, so the trend reads as a curve, not a jagged polyline.
+    function smoothPath(points) {
+      let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)} `;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p0 = points[i - 1] || points[i];
+        const p1 = points[i];
+        const p2 = points[i + 1];
+        const p3 = points[i + 2] || p2;
+        const cp1x = p1.x + (p2.x - p0.x) / 6;
+        const cp1y = p1.y + (p2.y - p0.y) / 6;
+        const cp2x = p2.x - (p3.x - p1.x) / 6;
+        const cp2y = p2.y - (p3.y - p1.y) / 6;
+        d += `C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)} `;
+      }
+      return d.trim();
+    }
+
+    // Trend sparkline of adjusted scores across the season — up = better (lower score).
+    // `width` is the container's real rendered pixel width, so the viewBox maps 1:1 to
+    // screen pixels and circle markers stay circular instead of being stretched into ellipses.
+    function buildTrendSparkline(playedRounds, width) {
+      if (playedRounds.length < 2) return '';
+      const W = Math.max(width, 100), H = 56, PAD_X = 8, PAD_Y = 10;
+      const values = playedRounds.map(r => r.adj);
+      const min = Math.min(...values), max = Math.max(...values);
+      const span = max - min || 1;
+      const n = playedRounds.length;
+      const gradId = 'pmTrendFill' + Math.random().toString(36).slice(2, 8);
+
+      const points = playedRounds.map((r, i) => {
+        const x = n === 1 ? W / 2 : PAD_X + (i * (W - 2 * PAD_X)) / (n - 1);
+        const norm = (r.adj - min) / span; // 0 = worst (highest), 1 = best (lowest)
+        const y = PAD_Y + (1 - norm) * (H - 2 * PAD_Y);
+        return { x, y, r };
+      });
+
+      const linePath = smoothPath(points);
+      const areaPath = `${linePath} L${points[n-1].x.toFixed(1)},${H} L${points[0].x.toFixed(1)},${H} Z`;
+
+      const dots = points.map((p, i) => {
+        const isLast = i === points.length - 1;
+        const color = p.r.isBest ? '#2ecc71' : p.r.isDropped ? '#ef4444' : '#d9c07a';
+        const radius = (isLast || p.r.isBest) ? 4 : 2.5;
+        return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="${radius}" fill="${color}"${isLast ? ' stroke="var(--navy-card)" stroke-width="1.5"' : ''}><title>Wk ${p.r.week + 1}: ${p.r.adj}</title></circle>`;
+      }).join('');
+
+      return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+        <defs>
+          <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#c9a84c" stop-opacity="0.28" />
+            <stop offset="100%" stop-color="#c9a84c" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <path d="${areaPath}" fill="url(#${gradId})" stroke="none" />
+        <path d="${linePath}" fill="none" stroke="rgba(201,168,76,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        ${dots}
+      </svg>`;
+    }
+
+    function openPlayerCard(name) {
+      const stats = getPlayerCardStats(name);
+      const { rows: standingsRows } = computeStandingsRows();
+      const standingsRow = standingsRows.find(r => r.name === name);
+
+      const tierClass = stats.tier === 'A' ? 'tier-a' : stats.tier === 'B' ? 'tier-b' : 'tier-c';
+      const topbarClass = stats.tier === 'B' ? 'tier-b' : stats.tier === 'C' ? 'tier-c' : '';
+      const hcpLabel = stats.hcp > 0 ? `−${stats.hcp} stroke${stats.hcp > 1 ? 's' : ''}/round` : 'Scratch';
+      const rankLabel = standingsRow && standingsRow.displayRank !== null
+        ? `${standingsRow.tied ? 'T-' : ''}${standingsRow.displayRank} of ${PLAYERS.length}`
+        : 'Unranked';
+
+      const playedRounds = [];
+      let roundsRows = '';
+      for (let w = 0; w < TOTAL_WEEKS; w++) {
+        if (stats.rainoutWeeks[w]) {
+          roundsRows += `<tr class="row-rainout">
+            <td>Wk ${w+1} · ${WEEK_DATES[w]}</td><td class="c" colspan="${stats.hcp > 0 ? 2 : 1}">—</td>
+            <td class="r"><span class="pm-status-badge pm-status-rainout">Rainout</span></td>
+          </tr>`;
+          continue;
+        }
+        const raw = stats.scores[w];
+        if (raw <= 0) continue;
+        const adj = raw - stats.hcp;
+        const isBest = stats.bestWeek === w;
+        const isDropped = stats.dropped.some(d => d.week === w);
+        playedRounds.push({ week: w, adj, isBest, isDropped });
+        const rowCls = isBest ? 'row-best' : isDropped ? 'row-dropped' : '';
+        const badge = isBest
+          ? '<span class="pm-status-badge pm-status-best">✦ Best</span>'
+          : isDropped
+            ? '<span class="pm-status-badge pm-status-dropped">✗ Dropped</span>'
+            : '<span class="pm-status-badge pm-status-counted">✓ Counted</span>';
+        roundsRows += `<tr class="${rowCls}">
+          <td>Wk ${w+1} · ${WEEK_DATES[w]}</td>
+          <td class="c">${raw}</td>
+          ${stats.hcp > 0 ? `<td class="c">${adj}</td>` : ''}
+          <td class="r">${badge}</td>
+        </tr>`;
+      }
+
+      const heroValue = stats.avg !== null ? stats.avg.toFixed(2) : '—';
+      const heroSub = stats.avg !== null
+        ? `Best ${stats.effectiveBestN} of ${stats.played} round${stats.played === 1 ? '' : 's'} counted`
+        : 'No rounds recorded yet';
+      const showTrend = playedRounds.length >= 2;
+
+      document.getElementById('pm-topbar').className = `pm-topbar ${topbarClass}`;
+
+      const content = document.getElementById('player-modal-content');
+      content.innerHTML = `
+        <div class="pm-header">
+          <div>
+            <div class="pm-name">${stats.name}</div>
+            <div class="pm-sub">
+              <span class="tier-badge ${tierClass}">${stats.tier}</span>
+              <span>${hcpLabel}</span>
+            </div>
+          </div>
+          <div class="pm-rank-pill">Rank ${rankLabel}</div>
+        </div>
+
+        <div class="pm-hero">
+          <div class="pm-hero-value">${heroValue}</div>
+          <div class="pm-hero-meta">
+            <div class="pm-hero-label">Adjusted Average</div>
+            <div class="pm-hero-sub">${heroSub}</div>
+          </div>
+        </div>
+
+        <div class="pm-stats-grid">
+          <div class="pm-stat"><div class="pm-stat-val">${stats.played || 0}</div><div class="pm-stat-label">Played</div></div>
+          <div class="pm-stat"><div class="pm-stat-val">${stats.total || '—'}</div><div class="pm-stat-label">Adj. Total</div></div>
+          <div class="pm-stat"><div class="pm-stat-val">${stats.bestScore !== null ? stats.bestScore : '—'}</div><div class="pm-stat-label">Best Round</div></div>
+          <div class="pm-stat"><div class="pm-stat-val">${stats.dropped.length || 0}</div><div class="pm-stat-label">Dropped</div></div>
+        </div>
+
+        ${showTrend ? `<div class="pm-trend"><div class="pm-trend-label">Season Trend</div><div class="pm-trend-chart" id="pm-trend-chart"></div></div>` : ''}
+
+        <div class="pm-rounds-title">Round by Round</div>
+        ${roundsRows
+          ? `<table class="pm-rounds-table">
+              <thead><tr><th>Week</th><th class="c">Raw</th>${stats.hcp > 0 ? '<th class="c">Adj.</th>' : ''}<th class="r">Status</th></tr></thead>
+              <tbody>${roundsRows}</tbody>
+            </table>`
+          : `<p class="pm-empty">No rounds recorded yet this season.</p>`}
+      `;
+
+      document.getElementById('player-modal').classList.add('active');
+
+      if (showTrend) {
+        const chartEl = document.getElementById('pm-trend-chart');
+        chartEl.innerHTML = buildTrendSparkline(playedRounds, chartEl.clientWidth);
+      }
+    }
+
+    function closePlayerCard() {
+      document.getElementById('player-modal').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closePlayerCard();
+    });
 
     // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
     async function renderChampionship() {
@@ -928,6 +1327,7 @@ const BEST_N = 6;
     function loadWeekScores() {
       const week = parseInt(document.getElementById('week-select').value);
       const data = loadData();
+      const isRainout = getRainoutWeeks(data)[week];
       document.getElementById('editing-week-label').textContent = `Week ${week + 1} \u2014 ${WEEK_DATES[week]}`;
       const grid = document.getElementById('score-editor-grid');
       grid.innerHTML = '';
@@ -941,25 +1341,44 @@ const BEST_N = 6;
           <label>${name} <span class="tier-badge ${tierClass}">${tier}</span></label>
           <input type="number" min="0" max="60" placeholder="\u2014"
             value="${score || ''}" class="${score ? 'has-score' : ''}"
-            data-player="${name}"
+            data-player="${name}" ${isRainout ? 'disabled' : ''}
             oninput="this.classList.toggle('has-score', this.value !== '')">
         `;
         grid.appendChild(row);
       });
+
+      document.getElementById('rainout-checkbox').checked = isRainout;
+      toggleRainoutInputs(isRainout);
     }
 
-    function buildScoreEditor() { loadWeekScores(); }
+    function toggleRainout() {
+      toggleRainoutInputs(document.getElementById('rainout-checkbox').checked);
+    }
+
+    function toggleRainoutInputs(isRainout) {
+      document.querySelectorAll('#score-editor-grid input').forEach(input => { input.disabled = isRainout; });
+      document.getElementById('score-editor-grid').classList.toggle('grid-disabled', isRainout);
+    }
+
+    function buildScoreEditor() {
+      loadWeekScores();
+      const data = loadData();
+      const rainoutCount = getRainoutWeeks(data).filter(Boolean).length;
+      document.getElementById('admin-best-n-label').textContent = getEffectiveBestN(rainoutCount);
+    }
 
     async function saveScores() {
       const btn    = document.querySelector('[onclick="saveScores()"]');
       const week   = parseInt(document.getElementById('week-select').value);
+      const isRainout = document.getElementById('rainout-checkbox').checked;
       const inputs = document.querySelectorAll('#score-editor-grid input');
       const scores = {};
 
       inputs.forEach(input => {
-        const val = parseInt(input.value);
+        const val = isRainout ? 0 : parseInt(input.value);
         scores[input.dataset.player] = isNaN(val) ? 0 : val;
       });
+      scores[RAINOUT_KEY] = isRainout ? 1 : 0;
 
       // Update cache immediately
       if (!_scoresCache) _scoresCache = {};
@@ -968,7 +1387,10 @@ const BEST_N = 6;
         if (val > 0) _scoresCache[name][week] = val;
         else delete _scoresCache[name][week];
       });
+      setLocalRainoutOverride(week, isRainout);
       renderStandings();
+      const rainoutCount = getRainoutWeeks(_scoresCache).filter(Boolean).length;
+      document.getElementById('admin-best-n-label').textContent = getEffectiveBestN(rainoutCount);
 
       if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
 
@@ -996,7 +1418,9 @@ const BEST_N = 6;
       const week = parseInt(document.getElementById('week-select').value);
       if (_scoresCache) {
         PLAYERS.forEach(name => { if (_scoresCache[name]) delete _scoresCache[name][week]; });
+        if (_scoresCache[RAINOUT_KEY]) delete _scoresCache[RAINOUT_KEY][week];
       }
+      setLocalRainoutOverride(week, false);
       try {
         await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
@@ -1008,6 +1432,8 @@ const BEST_N = 6;
       }
       loadWeekScores();
       renderStandings();
+      const rainoutCount = getRainoutWeeks(loadData()).filter(Boolean).length;
+      document.getElementById('admin-best-n-label').textContent = getEffectiveBestN(rainoutCount);
     }
 
     // ── CHAMPIONSHIP EDITOR ────────────────────────────────────────
