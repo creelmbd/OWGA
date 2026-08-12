@@ -653,13 +653,13 @@
             <label class="rainout-check">
               <input type="checkbox" id="rainout-checkbox" onchange="toggleRainout()">
               <i class="fas fa-cloud-showers-heavy"></i>
-              <span>Mark this week as a Rainout (no round played — the 2nd rainout of the season and each one after lowers the minimum counted rounds for everyone)</span>
+              <span>Mark this week as a Rainout (no round played — the 2nd rainout of the season drops the minimum counted rounds to 5 for everyone)</span>
             </label>
           </div>
 
           <p class="admin-note" id="admin-scoring-note">
             <i class="fas fa-info-circle"></i>
-            Enter raw (unadjusted) scores as played. Tier handicaps (B: −1, C: −2) are applied automatically in standings and weekly views. Best <span id="admin-best-n-label">6</span> adjusted rounds are counted. Enter 0 or leave blank for absent players. The season starts at a 6-round minimum; the 1st rainout doesn't change it, but every rainout after that lowers the minimum by 1 round (2 total rainouts → 5, 3 total → 4, and so on).
+            Enter raw (unadjusted) scores as played. Tier handicaps (B: −1, C: −2) are applied automatically in standings and weekly views. Best <span id="admin-best-n-label">6</span> adjusted rounds are counted. Enter 0 or leave blank for absent players. The season starts at a 6-round minimum; the 1st rainout doesn't change it, but the 2nd drops it to 5 rounds — floored there no matter how many more rainouts happen.
           </p>
 
           <!-- Championship editor -->
@@ -804,11 +804,11 @@ const BEST_N = 6;
       );
     }
 
-    // 0-1 rainouts: best 6 count. 2nd rainout drops the minimum to 5 (n-1),
-    // 3rd drops it to 4, continuing by one round per rainout beyond that.
+    // 0-1 rainouts: best 6 count. 2nd rainout drops the minimum to 5 (n-1).
+    // Floored at 5 — it never drops further, no matter how many more rainouts happen.
     function getEffectiveBestN(rainoutCount) {
       const decrement = rainoutCount > 1 ? rainoutCount - 1 : 0;
-      return Math.max(BEST_N - decrement, 1);
+      return Math.max(BEST_N - decrement, 5);
     }
 
     // ── DATA ───────────────────────────────────────────────────────
