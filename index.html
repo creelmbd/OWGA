@@ -245,6 +245,72 @@
       .home-grid { grid-template-columns: 1fr; }
     }
 
+    /* ── SPONSORS ───────────────────────────────────── */
+    .sponsors-band {
+      background: var(--navy-mid);
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+    .sponsors-section {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 3rem 5% 4rem;
+      text-align: center;
+    }
+    .sponsors-section .section-header { justify-content: center; }
+    .sponsors-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 460px));
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .sponsor-card { text-align: left; margin: 0 auto; }
+    .sponsor-card {
+      background: var(--navy-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .sponsor-card:hover { border-color: var(--border-strong); background: var(--navy-light); }
+    .sponsor-logo {
+      width: 68px;
+      height: 68px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, rgba(240,208,128,0.16), rgba(160,120,48,0.05) 70%);
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+    .sponsor-name {
+      font-family: var(--serif-display);
+      font-size: 1.15rem;
+      color: var(--gold-pale);
+      letter-spacing: 0.03em;
+    }
+    .sponsor-tag {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .sponsor-badge {
+      font-family: var(--sans);
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold-muted);
+      margin-top: 0.35rem;
+      display: inline-block;
+    }
+
     /* ── WEATHER CARD ───────────────────────────────── */
     .weather-card {
       background: var(--navy-card);
@@ -467,6 +533,41 @@
         </div>
 
       </div>
+    </div>
+
+    <!-- Sponsors -->
+    <div class="sponsors-band">
+      <section class="sponsors-section">
+        <div class="section-header">
+          <div>
+            <span class="section-label">Thank You</span>
+            <h2>Season Sponsor</h2>
+          </div>
+        </div>
+
+        <div class="sponsors-grid">
+          <div class="sponsor-card">
+            <div class="sponsor-logo">
+              <svg viewBox="0 0 100 100" width="100%" height="100%" aria-label="R&amp;R Honey logo">
+                <defs>
+                  <linearGradient id="honeyGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#f0d080"/>
+                    <stop offset="100%" stop-color="#c9a84c"/>
+                  </linearGradient>
+                </defs>
+                <polygon points="50,6 85,26 85,66 50,86 15,66 15,26" fill="none" stroke="url(#honeyGrad)" stroke-width="3.5"/>
+                <path d="M50 30 C50 30 68 52 68 63 C68 73.5 60 81 50 81 C40 81 32 73.5 32 63 C32 52 50 30 50 30 Z" fill="url(#honeyGrad)"/>
+                <ellipse cx="43.5" cy="59" rx="3.5" ry="7" fill="rgba(255,255,255,0.4)"/>
+              </svg>
+            </div>
+            <div>
+              <div class="sponsor-name">R&amp;R Honey</div>
+              <div class="sponsor-tag">Local, raw honey — proud supporter of the 2026 OWGA season</div>
+              <span class="sponsor-badge">Season Sponsor</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 
