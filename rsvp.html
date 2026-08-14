@@ -1322,13 +1322,15 @@
   // ── Pairing algorithm ──────────────────────────────────────────
   // Scores fetched from the same Apps Script as the leaderboard page.
   // calcPlayerAdjAvg mirrors calcPlayer() in leaderboard.html exactly:
-  //   raw scores → apply tier hcp → best BEST_N → average.
+  //   raw scores → apply tier hcp → best effectiveBestN → average,
+  //   including the rainout drop from BEST_N (6) to 5 at 2+ rainout weeks.
   // Unscored players use tier placeholder (A=36, B=38, C=40) for sorting,
   // shown as #seasonRank in the display (matching leaderboard grey values).
   // Sort: adj avg asc, season rank as tiebreaker. Pair #1 with #N, #2 with #N-1.
 
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyEHPhmfr_2xlsAM_Oa5iZwglbzat0tPl65png1nwsaUgWZ5igzjCp9LiQ0WE804cTW-A/exec';
-  const BEST_N   = 6;
+  const BEST_N      = 6;
+  const RAINOUT_KEY = '__RAINOUT__';
   const TIER_PH  = { A: 36, B: 38, C: 40 };
   let   _scoresCache = null;
 
@@ -1350,7 +1352,16 @@
     return t === 'B' ? 1 : t === 'C' ? 2 : 0;
   }
 
-  function calcPlayerAdjAvg(name, data) {
+  // Mirrors leaderboard.html's getEffectiveBestN(): 0-1 rainouts, best 6 count;
+  // each additional rainout beyond the first drops the minimum by 1, floored at 5.
+  function getEffectiveBestN(data) {
+    const rainoutCount = Object.values(data[RAINOUT_KEY] || {})
+      .filter(v => Number(v) > 0).length;
+    const decrement = rainoutCount > 1 ? rainoutCount - 1 : 0;
+    return Math.max(BEST_N - decrement, 5);
+  }
+
+  function calcPlayerAdjAvg(name, data, bestN = BEST_N) {
     const hcp     = getTierHcp(name);
     const rawObj  = data[name] || {};
     // rawObj keys are week indices (0–13); values are raw scores
@@ -1359,14 +1370,15 @@
       .filter(s => s > 0)
       .map(s => s - hcp)
       .sort((a, b) => a - b)
-      .slice(0, BEST_N);
+      .slice(0, bestN);
     if (attended.length === 0) return null;
     return attended.reduce((a, b) => a + b, 0) / attended.length;
   }
 
   function buildPairings(attending, scoresData) {
+    const effectiveBestN = getEffectiveBestN(scoresData);
     const withStats = attending.map(name => {
-      const avg = calcPlayerAdjAvg(name, scoresData);
+      const avg = calcPlayerAdjAvg(name, scoresData, effectiveBestN);
       const ph  = TIER_PH[TIER_MAP[name]] ?? 38;
       return {
         name,
