@@ -1027,11 +1027,23 @@
       min-width: 0; /* prevent overflow */
     }
     .tp-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.05rem;
       font-family: var(--serif-display);
       font-size: 0.8rem;
       color: var(--gold-muted);
       min-width: 36px;
       flex-shrink: 0;
+    }
+    .tp-avg { line-height: 1; }
+    .tp-total {
+      font-family: var(--sans);
+      font-size: 0.56rem;
+      font-weight: 500;
+      color: var(--muted);
+      line-height: 1;
     }
     .tp-name {
       font-size: 0.84rem;
@@ -1198,6 +1210,14 @@
     'Rd 1','Rd 2','Rd 3','Rd 4','Rd 5','Rd 6','Rd 7',
     'Rd 8','Rd 9','Rd 10','Rd 11','Rd 12','Rd 13','Rd 14'
   ];
+
+  // Championship day (Aug 22) isn't a scored round in ROUND_ISO — it's played
+  // straight up, no handicap. But once Rd 14 (Aug 21) is in, players are
+  // seeded for Aug 22 pairings by their final hdcp-adjusted season average,
+  // same pairing algorithm as every other week.
+  const CHAMPIONSHIP_ISO   = '2026-08-22';
+  const CHAMPIONSHIP_LABEL = 'Championship';
+  const CHAMPIONSHIP_DATE  = 'Aug 22';
 // Players who haven't been playing this season — filtered out of the roster read
   // from the RSVP sheet below, without touching their rows in the sheet itself.
   // To bring someone back, just remove their name here.
@@ -1333,6 +1353,7 @@
   const RAINOUT_KEY = '__RAINOUT__';
   const TIER_PH  = { A: 36, B: 38, C: 40 };
   let   _scoresCache = null;
+  let   _champCache  = null;
 
   async function fetchScores() {
     if (_scoresCache) return _scoresCache;
@@ -1347,9 +1368,34 @@
     return _scoresCache;
   }
 
+  // Championship Day front9/back9 entries, keyed by player name — same
+  // getChampionship endpoint the leaderboard admin editor writes to.
+  async function fetchChampData() {
+    if (_champCache) return _champCache;
+    try {
+      const res  = await fetch(`${APPS_SCRIPT_URL}?action=getChampionship`);
+      const json = await res.json();
+      const map = {};
+      (json.results || []).forEach(e => { if (e.name) map[e.name] = e; });
+      _champCache = map;
+    } catch(e) {
+      console.error('Could not load championship data:', e);
+      _champCache = {};
+    }
+    return _champCache;
+  }
+
   function getTierHcp(name) {
     const t = TIER_MAP[name] || 'A';
     return t === 'B' ? 1 : t === 'C' ? 2 : 0;
+  }
+
+  // One-time strokes credited before Championship Day, on top of the
+  // per-round handicap already baked into the season total — same rate
+  // as the per-round tier handicap (B: -1, C: -2), applied once. Mirrors
+  // getChampionshipHcp() in leaderboard.html.
+  function getChampionshipHcp(name) {
+    return getTierHcp(name);
   }
 
   // Mirrors leaderboard.html's getEffectiveBestN(): 0-1 rainouts, best 6 count;
@@ -1361,6 +1407,9 @@
     return Math.max(BEST_N - decrement, 5);
   }
 
+  // Returns { avg, total, count } for a player's best-N adjusted rounds —
+  // total is the summed strokes behind the counted rounds, avg is total /
+  // count. All null if the player has no scores yet.
   function calcPlayerAdjAvg(name, data, bestN = BEST_N) {
     const hcp     = getTierHcp(name);
     const rawObj  = data[name] || {};
@@ -1371,24 +1420,21 @@
       .map(s => s - hcp)
       .sort((a, b) => a - b)
       .slice(0, bestN);
-    if (attended.length === 0) return null;
-    return attended.reduce((a, b) => a + b, 0) / attended.length;
+    if (attended.length === 0) return { avg: null, total: null, count: 0 };
+    const total = attended.reduce((a, b) => a + b, 0);
+    return { avg: total / attended.length, total, count: attended.length };
   }
 
-  function buildPairings(attending, scoresData) {
-    const effectiveBestN = getEffectiveBestN(scoresData);
-    const withStats = attending.map(name => {
-      const avg = calcPlayerAdjAvg(name, scoresData, effectiveBestN);
-      const ph  = TIER_PH[TIER_MAP[name]] ?? 38;
-      return {
-        name,
-        avg,                                    // null if no scores yet
-        sortAvg: avg !== null ? avg : ph,       // continuous sort scale
-        seasonRank: SEASON_RANK[name] ?? 99
-      };
-    });
-
-    // Sort to match leaderboard rank: adj avg asc, season rank as tiebreaker
+  // isChampionship: layers the one-time Championship handicap (see
+  // getChampionshipHcp) on top of each player's season total before
+  // ranking, so it can move a player ahead of someone in a higher tier —
+  // used only for Aug 22 seeding, never for the weekly regular-season sort.
+  // Shared best-vs-worst pairing + rotation-solo logic. Takes an array of
+  // player stat objects that each already carry `sortAvg` (the ranking
+  // value, lower = better) and `seasonRank` (tiebreaker) — used for weekly
+  // pairings, Championship front-9 seeding, and Championship back-9
+  // re-pairing alike, so all three stay behaviorally identical.
+  function pairFromRanked(withStats) {
     withStats.sort((a, b) => {
       const diff = Math.round(a.sortAvg * 100) - Math.round(b.sortAvg * 100);
       if (diff !== 0) return diff;
@@ -1426,6 +1472,68 @@
     }
 
     return pairs;
+  }
+
+  function buildPairings(attending, scoresData, isChampionship = false) {
+    const effectiveBestN = getEffectiveBestN(scoresData);
+    const withStats = attending.map(name => {
+      const { avg, total, count } = calcPlayerAdjAvg(name, scoresData, effectiveBestN);
+      const ph  = TIER_PH[TIER_MAP[name]] ?? 38;
+
+      let champHcp = null, startingTotal = null, seedAvg = avg;
+      if (isChampionship && total !== null) {
+        champHcp      = getChampionshipHcp(name);
+        startingTotal = total - champHcp;
+        seedAvg       = count > 0 ? startingTotal / count : avg;
+      }
+
+      return {
+        name,
+        avg,                                          // null if no scores yet
+        total,                                         // null if no scores yet
+        champHcp,                                      // null unless isChampionship
+        startingTotal,                                 // null unless isChampionship
+        sortAvg: seedAvg !== null ? seedAvg : ph,      // continuous sort scale
+        seasonRank: SEASON_RANK[name] ?? 99
+      };
+    });
+
+    return pairFromRanked(withStats);
+  }
+
+  // Back-9 re-pairing: once every attending player's front-9 score is in,
+  // re-shuffle best-vs-worst using a running total = starting total (season
+  // adjusted total minus the one-time Championship handicap, same number
+  // used to seed the front 9) + the front-9 raw score just played. The
+  // Championship handicap is not re-applied here — it was already folded
+  // into the starting total once, for the front-9 seed.
+  function buildBackNinePairings(attending, scoresData, champMap) {
+    const effectiveBestN = getEffectiveBestN(scoresData);
+    const withStats = attending.map(name => {
+      const { total, count } = calcPlayerAdjAvg(name, scoresData, effectiveBestN);
+      const ph = TIER_PH[TIER_MAP[name]] ?? 38;
+      const champHcp = getChampionshipHcp(name);
+      const frontNine = parseInt(champMap[name]?.front) || 0;
+
+      let startingTotal = null, runningTotal = null, sortAvg = ph;
+      if (total !== null) {
+        startingTotal = total - champHcp;
+        runningTotal  = startingTotal + frontNine;
+        sortAvg       = count > 0 ? runningTotal / (count + 1) : startingTotal;
+      }
+
+      return {
+        name,
+        champHcp,
+        startingTotal,     // null if no season scores yet
+        frontNine,
+        runningTotal,      // null if no season scores yet
+        sortAvg,
+        seasonRank: SEASON_RANK[name] ?? 99
+      };
+    });
+
+    return pairFromRanked(withStats);
   }
 
   // ── Tee time helpers ──────────────────────────────────────────
@@ -1510,13 +1618,16 @@
   }
 
   // ── Render pairings ────────────────────────────────────────────
-  async function renderPairings(playerRows, roundCols) {
+  async function renderPairings(playerRows, roundCols, champCol) {
     const wrap = document.getElementById('pairings-wrap');
 
     // Find next upcoming round index
     const todayStr = new Date().toISOString().slice(0, 10);
     let nextRoundIdx = ROUND_ISO.findIndex(d => d >= todayStr);
     if (nextRoundIdx === -1) {
+      if (champCol > 0 && todayStr <= CHAMPIONSHIP_ISO) {
+        return renderChampionshipPairings(playerRows, champCol);
+      }
       wrap.innerHTML = `<div class="pairings-loading"><i class="fas fa-trophy" style="color:var(--gold-muted);"></i>Season complete — no upcoming rounds.</div>`;
       return;
     }
@@ -1670,6 +1781,251 @@
 
     html += `</div>`;
     wrap.innerHTML = html;
+  }
+
+  // ── Render championship pairings (Aug 22) ───────────────────────
+  // Seeded the same way as every weekly round — buildPairings() ranks by
+  // final hdcp-adjusted season average (Tier B: −1/round, Tier C: −2/round)
+  // then season rank, using whatever scores are in the sheet at load time.
+  // Once Rd 14 (Aug 21) scores are saved, that average is final, so the
+  // seed shown here is the same one that decides Aug 22 pairings.
+  // Renders one set of tee groups into HTML. playerStatFn(player) returns
+  // { statStr, subStr } — the two numbers shown on each player's badge —
+  // so the same markup serves the front-9 seed view and the back-9
+  // re-paired view, which show different stats.
+  function renderTeeGroupsHtml(groups, playerStatFn) {
+    let html = `<div class="tee-groups" id="tee-groups-capture">`;
+
+    groups.forEach((groupPairs, gi) => {
+      const teeTime = teeTimeStr(gi);
+      const playerCount = groupPairs.reduce((sum, p) => sum + p.players.length, 0);
+      const pairCount   = groupPairs.length;
+
+      html += `
+        <div class="tee-group">
+          <div class="tee-group-header">
+            <span class="tee-time-badge">${teeTime}</span>
+            <div class="tee-group-divider"></div>
+            <span class="tee-group-label">Tee ${gi + 1}</span>
+            <span class="tee-group-count">${pairCount} pair${pairCount !== 1 ? 's' : ''} · ${playerCount} player${playerCount !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="tee-group-pairs">`;
+
+      groupPairs.forEach((pair, pi) => {
+        const { players, type } = pair;
+        const isRotation = type === 'rotation';
+        const isOddOut   = type === 'oddout';
+
+        const pairLabel = isRotation
+          ? `⚑ Rotation`
+          : isOddOut
+          ? `⚑ Solo — 2 balls`
+          : `Pair ${pi + 1}`;
+
+        html += `<div class="tee-pair${(isRotation || isOddOut) ? ' solo-pair' : ''}">
+          <div class="tee-pair-label">${pairLabel}</div>
+          <div class="tee-pair-players">`;
+
+        players.forEach((player, pli) => {
+          const { name } = player;
+          const tier    = TIER_MAP[name] || 'A';
+          const tierCls = tier === 'A' ? 'ta' : tier === 'B' ? 'tb' : 'tc';
+          const { statStr, subStr } = playerStatFn(player);
+          html += `<div class="tee-player">
+            <span class="tp-stat"><span class="tp-avg">${statStr}</span>${subStr ? `<span class="tp-total">${subStr}</span>` : ''}</span>
+            <span class="tp-name">${name}</span>
+            <span class="tp-tier ${tierCls}">${tier}</span>
+          </div>`;
+          if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
+        });
+
+        html += `</div>`;
+
+        if (isRotation) {
+          const anchor = pair.rotationAnchor || '';
+          html += `<div class="solo-rotation-note">Tees off alone · rotates Minges / Creelman / Tracy · <strong style="color:#e8c060;">${anchor}</strong> this round</div>`;
+        } else if (isOddOut) {
+          html += `<div class="solo-rotation-note">Plays 2 balls this round</div>`;
+        }
+
+        html += `</div>`; // close tee-pair
+      });
+
+      html += `</div></div>`; // close tee-group-pairs, tee-group
+    });
+
+    html += `</div>`; // close tee-groups
+    return html;
+  }
+
+  function renderAttendingListHtml(pairs, attendingCount, notAttending, labelFn) {
+    const allSorted = pairs.filter(p => p.type !== 'rotation').flatMap(p => p.players);
+    let html = `
+      <div class="attending-list">
+        <div class="attending-list-title">
+          <i class="fas fa-check-circle" style="color:#72d48a;margin-right:0.3rem;"></i>
+          Attending (${attendingCount})
+        </div>
+        <div class="attending-chips">`;
+    allSorted.forEach(player => {
+      html += `<span class="attending-chip"><span class="chip-rank">${labelFn(player)}</span>${player.name}</span>`;
+    });
+    html += `</div>`;
+
+    if (notAttending.length > 0) {
+      html += `
+        <div class="attending-list-title" style="margin-top:1rem;">
+          <i class="fas fa-times-circle" style="color:#e07878;margin-right:0.3rem;"></i>
+          Not attending (${notAttending.length})
+        </div>
+        <div class="attending-chips">`;
+      notAttending.forEach(name => {
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    return html;
+  }
+
+  async function renderChampionshipPairings(playerRows, champCol) {
+    const wrap = document.getElementById('pairings-wrap');
+
+    const attending = [], notAttending = [], pending = [];
+    playerRows.forEach(row => {
+      const name = (row[2] || '').trim();
+      if (!name) return;
+      const rsvp = (row[champCol] || '').trim().toLowerCase();
+      if (rsvp === 'yes') attending.push(name);
+      else if (rsvp === 'no') notAttending.push(name);
+      else pending.push({ name, status: rsvp === 'ttd' ? 'ttd' : 'blank' });
+    });
+    const allResponded = pending.length === 0;
+
+    if (!allResponded) {
+      const pendingListHtml = pending.length > 0
+        ? pending.map(entry => `<span class="pairings-pending-chip">${entry.name}${entry.status === 'ttd' ? ' · TTD' : ' · no response'}</span>`).join('')
+        : '<span class="pairings-pending-chip">No pending names found</span>';
+
+      wrap.innerHTML = `
+        <div class="pairings-locked">
+          <div class="pairings-lock-icon"><i class="fas fa-lock"></i></div>
+          <h3>Waiting for all RSVPs</h3>
+          <p>Championship pairings unlock once everyone has responded <strong>Yes</strong> or <strong>No</strong> for <strong>${CHAMPIONSHIP_DATE}</strong>. Players marked <strong>TTD</strong> or with no response still need to update their RSVP.</p>
+          <div class="pairings-lock-meta">
+            <i class="fas fa-calendar-alt"></i> Championship Day: <strong>${CHAMPIONSHIP_DATE}</strong>
+          </div>
+          <div class="pairings-pending-list">
+            <div class="pairings-pending-title">Still waiting on ${pending.length} player${pending.length === 1 ? '' : 's'}</div>
+            <div class="pairings-pending-chips">${pendingListHtml}</div>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => renderChampionshipPairings(playerRows, champCol), 60000);
+      return;
+    }
+
+    // Front 9 is seeded from season standing; once everyone's front-9 score
+    // is in, the back 9 gets re-paired — see renderBackNinePairings.
+    _champCache = null;
+    const champMap = await fetchChampData();
+    const allFrontNineIn = attending.every(name => (parseInt(champMap[name]?.front) || 0) > 0);
+    if (allFrontNineIn) {
+      return renderBackNinePairings(playerRows, champCol, attending, notAttending, champMap);
+    }
+
+    const scoresData = await fetchScores();
+    const pairs  = buildPairings(attending, scoresData, true);
+    const groups = assignTeeGroups(pairs);
+    const isOdd  = attending.length % 2 === 1;
+
+    let html = `
+      <div class="pairings-header">
+        <div>
+          <span class="section-label">Championship Day — Front 9</span>
+          <h2>${CHAMPIONSHIP_LABEL} — Tee Times &amp; Pairings</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <span class="pairings-round-tag">${CHAMPIONSHIP_DATE} &bull; First tee 5:09 PM</span>
+          <button class="btn-snapshot" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
+            <i class="fas fa-camera"></i> Copy Snapshot
+          </button>
+        </div>
+      </div>
+      <p class="pairings-note">
+        <i class="fas fa-info-circle"></i>
+        Seeded by each player's season average (Tier B: −1/round, Tier C: −2/round) plus a one-time Championship handicap on top (Tier B: −1, Tier C: −2), then season rank. The Championship round itself is scored straight up — this seeding sets the front-9 pairings only. Partners switch after 9: once every front-9 score is in, this page re-pairs everyone for the back 9.${isOdd ? ' <strong style="color:#e8b84a;">Odd number attending — solo player plays 2 balls.</strong>' : ''}
+      </p>`;
+
+    html += renderTeeGroupsHtml(groups, player => {
+      // sortAvg/startingTotal already include the one-time Championship
+      // handicap (see getChampionshipHcp) — this is the seeded number,
+      // not the plain season average.
+      const statStr = player.avg !== null ? player.sortAvg.toFixed(2) : `#${player.seasonRank}`;
+      const subStr  = player.startingTotal !== null ? String(player.startingTotal) : '';
+      return { statStr, subStr };
+    });
+
+    html += renderAttendingListHtml(pairs, attending.length, notAttending,
+      player => player.avg !== null ? player.sortAvg.toFixed(2) : `#${player.seasonRank}`);
+
+    html += `</div>`;
+    wrap.innerHTML = html;
+
+    // Front-9 scores get entered mid-round — poll so this page flips to
+    // back-9 pairings without anyone needing to refresh manually.
+    setTimeout(() => renderChampionshipPairings(playerRows, champCol), 90000);
+  }
+
+  async function renderBackNinePairings(playerRows, champCol, attending, notAttending, champMap) {
+    const wrap = document.getElementById('pairings-wrap');
+
+    const allBackNineIn = attending.every(name => (parseInt(champMap[name]?.back) || 0) > 0);
+    if (allBackNineIn) {
+      wrap.innerHTML = `<div class="pairings-loading"><i class="fas fa-trophy" style="color:var(--gold-muted);"></i>Championship complete — see final results on the Leaderboard.</div>`;
+      return;
+    }
+
+    const scoresData = await fetchScores();
+    const pairs  = buildBackNinePairings(attending, scoresData, champMap);
+    const groups = assignTeeGroups(pairs);
+    const isOdd  = attending.length % 2 === 1;
+
+    let html = `
+      <div class="pairings-header">
+        <div>
+          <span class="section-label">Championship Day — Back 9</span>
+          <h2>${CHAMPIONSHIP_LABEL} — Back 9 Pairings</h2>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+          <span class="pairings-round-tag">${CHAMPIONSHIP_DATE} &bull; Re-paired at the turn</span>
+          <button class="btn-snapshot" id="pairings-snapshot-btn" onclick="copyPairingsSnapshot()" title="Copy pairings image to clipboard">
+            <i class="fas fa-camera"></i> Copy Snapshot
+          </button>
+        </div>
+      </div>
+      <p class="pairings-note">
+        <i class="fas fa-info-circle"></i>
+        Re-seeded for the back 9: starting total (season average plus the one-time Championship handicap) plus each player's front-9 score, best paired with worst again.${isOdd ? ' <strong style="color:#e8b84a;">Odd number attending — solo player plays 2 balls.</strong>' : ''}
+      </p>`;
+
+    html += renderTeeGroupsHtml(groups, player => ({
+      statStr: player.runningTotal !== null ? String(player.runningTotal) : `#${player.seasonRank}`,
+      subStr: player.frontNine ? `F9: ${player.frontNine}` : ''
+    }));
+
+    html += renderAttendingListHtml(pairs, attending.length, notAttending,
+      player => player.runningTotal !== null ? String(player.runningTotal) : `#${player.seasonRank}`);
+
+    html += `</div>`;
+    wrap.innerHTML = html;
+
+    setTimeout(async () => {
+      _champCache = null;
+      const freshChampMap = await fetchChampData();
+      renderBackNinePairings(playerRows, champCol, attending, notAttending, freshChampMap);
+    }, 60000);
   }
 
   // ── Main load ──────────────────────────────────────────────────
@@ -1846,7 +2202,7 @@
       }
 
       // Render pairings (uses same parsed data)
-      renderPairings(playerRows, roundCols);
+      renderPairings(playerRows, roundCols, champCol);
 
       // ── Determine next upcoming round ─────────────────────────
       const todayStr = new Date().toISOString().slice(0, 10);

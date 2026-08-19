@@ -1056,9 +1056,9 @@ h2 {
 
   .lb-table th, .lb-table td { padding: 0.6rem 0.6rem; font-size: 0.78rem; }
   /* Hide less critical columns on small screens */
-  .lb-table .hide-mobile { display: none; }
+  .lb-table .hide-mobile, .champ-table .hide-mobile { display: none; }
 
-  .weekly-scroll { -webkit-overflow-scrolling: touch; }
+  .weekly-scroll, .table-scroll { -webkit-overflow-scrolling: touch; }
   .weekly-table { font-size: 0.72rem; }
   .weekly-table th, .weekly-table td { padding: 0.4rem 0.3rem; }
 

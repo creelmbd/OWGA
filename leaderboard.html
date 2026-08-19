@@ -81,6 +81,9 @@
     .avg-val { font-family: var(--serif-display); font-size: 1.05rem; color: var(--gold-bright); font-variant-numeric: tabular-nums; }
     .stat-muted { font-family: var(--serif-display); color: var(--muted); font-size: 0.92rem; font-variant-numeric: tabular-nums; }
 
+    /* Horizontal scroll for any table that can outgrow a narrow screen */
+    .table-scroll { overflow-x: auto; }
+
     /* Weekly grid */
     .weekly-scroll { overflow-x: auto; }
     .weekly-table {
@@ -252,7 +255,7 @@
     .champ-row {
       background: var(--navy-card); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 0.65rem 1rem;
-      display: grid; grid-template-columns: 40px 1fr 1fr 70px 70px; align-items: center; gap: 0.5rem;
+      display: grid; grid-template-columns: 40px 1fr 70px 70px; align-items: center; gap: 0.5rem;
     }
     .champ-row .place-lbl { font-family: var(--serif-display); color: var(--gold-pale); font-size: 0.95rem; text-align: center; }
     .champ-row input {
@@ -478,23 +481,25 @@
           <div class="legend-item"><span class="tier-badge tier-a">A</span> No handicap &nbsp;<span class="tier-badge tier-b">B</span> −1/round &nbsp;<span class="tier-badge tier-c">C</span> −2/round</div>
         </div>
 
-        <table class="lb-table" id="standings-tbody-wrap">
-          <thead>
-            <tr>
-              <th class="c" style="width:52px;">Rank</th>
-              <th>Player</th>
-              <th class="c hide-mobile">Tier</th>
-              <th class="c hide-mobile">Season Rank</th>
-              <th class="r">Adj. Avg</th>
-              <th class="r hide-mobile">Adj. Total</th>
-              <th class="r hide-mobile">Raw Avg</th>
-              <th class="r hide-mobile">Raw Total</th>
-              <th class="c">Played</th>
-              <th class="c hide-mobile">Dropped</th>
-            </tr>
-          </thead>
-          <tbody id="standings-tbody"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table class="lb-table" id="standings-tbody-wrap">
+            <thead>
+              <tr>
+                <th class="c" style="width:52px;">Rank</th>
+                <th>Player</th>
+                <th class="c hide-mobile">Tier</th>
+                <th class="c hide-mobile">Season Rank</th>
+                <th class="r">Adj. Avg</th>
+                <th class="r hide-mobile">Adj. Total</th>
+                <th class="r hide-mobile">Raw Avg</th>
+                <th class="r hide-mobile">Raw Total</th>
+                <th class="c">Played</th>
+                <th class="c hide-mobile">Dropped</th>
+              </tr>
+            </thead>
+            <tbody id="standings-tbody"></tbody>
+          </table>
+        </div>
 
         <p class="section-note" id="standings-note">
           <i class="fas fa-info-circle"></i>
@@ -604,9 +609,19 @@
         </div>
         <p class="champ-format-note">
           <i class="fas fa-info-circle"></i>
-          18-hole scramble · Partners switch at the turn · No handicaps · Ranked by individual 18-hole total
+          18-hole scramble · Partners switch at the turn · No handicap on the round itself · Ranked by individual 18-hole total
         </p>
-        <div id="champ-content"></div>
+        <div id="champ-content" class="table-scroll"></div>
+
+        <div style="margin-top:2.5rem;">
+          <span class="section-label">Entering Championship Day</span>
+          <h3 style="margin:0.35rem 0 0.75rem;font-family:var(--serif-display);font-size:1.05rem;color:var(--gold-pale);">Seeding &amp; Pairings</h3>
+          <p class="champ-format-note">
+            <i class="fas fa-info-circle"></i>
+            Once the last regular round (Aug 21) is in, players are seeded for Aug 22 pairings by their final hdcp-adjusted season average — Tier B: −1/round, Tier C: −2/round. This seeding sets pairings only; it does not change how the Championship round itself is scored.
+          </p>
+          <div id="champ-seed-content" class="table-scroll"></div>
+        </div>
       </div>
 
       <!-- ADMIN -->
@@ -665,10 +680,9 @@
           <!-- Championship editor -->
           <div class="champ-editor">
             <h4>Championship Day Results</h4>
-            <div style="display:grid;grid-template-columns:40px 1fr 1fr 70px 70px;gap:0.5rem;padding:0 1rem 0.5rem;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">
+            <div style="display:grid;grid-template-columns:40px 1fr 70px 70px;gap:0.5rem;padding:0 1rem 0.5rem;font-size:0.65rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);">
               <span style="text-align:center;">#</span>
               <span>Player</span>
-              <span>Partner swap note</span>
               <span style="text-align:center;">Front 9</span>
               <span style="text-align:center;">Back 9</span>
             </div>
@@ -679,7 +693,7 @@
             </div>
             <p class="admin-note" style="margin-top:0.75rem;">
               <i class="fas fa-info-circle"></i>
-              Enter each player's name, an optional note about their partner pairing, and their front 9 and back 9 scores. Rows are sorted by total automatically on the public view. No handicaps applied on championship day.
+              Enter each player's name and their front 9 and back 9 scores. Rows are sorted by total automatically on the public view. No handicap is applied to determine the winner — Aug 22 pairings are seeded separately, using each player's final hdcp-adjusted standing (see the "Entering Championship Day" seeding on the Championship tab).
             </p>
           </div>
 
@@ -781,6 +795,15 @@ const BEST_N = 6;
     function adjustScore(name, rawScore) {
       if (rawScore <= 0) return rawScore;
       return rawScore - getTierHandicap(name);
+    }
+
+    // One-time strokes credited before Championship Day, on top of the
+    // per-round handicap already baked into the season total — same rate
+    // as the per-round tier handicap (B: -1, C: -2), applied once.
+    // A C player with 5 counted rounds this season ends up 12 strokes
+    // under their raw total entering the championship: 5 × 2 (season) + 2 (this).
+    function getChampionshipHcp(name) {
+      return getTierHandicap(name);
     }
 
     // ── RAINOUTS ───────────────────────────────────────────────────
@@ -1243,7 +1266,7 @@ const BEST_N = 6;
       const rows = champ
         .filter(e => e.name)
         .map(e => ({
-          name: e.name, note: e.note || '',
+          name: e.name,
           front: parseInt(e.front) || 0,
           back:  parseInt(e.back)  || 0,
           total: (parseInt(e.front) || 0) + (parseInt(e.back) || 0)
@@ -1279,7 +1302,7 @@ const BEST_N = 6;
         tr.className = placeClass(row.rank);
         tr.innerHTML = `
           <td class="c"><span class="${placeNumClass(row.rank)}">${row.rank}</span></td>
-          <td style="font-weight:500;color:var(--white);">${row.name}${row.note ? `<span style="font-size:0.75rem;color:var(--muted);margin-left:0.5rem;font-weight:400;">${row.note}</span>` : ''}</td>
+          <td style="font-weight:500;color:var(--white);">${row.name}</td>
           <td class="c"><span class="champ-nine">${row.front || '\u2014'}</span></td>
           <td class="c"><span class="champ-nine">${row.back  || '\u2014'}</span></td>
           <td class="r"><span class="champ-total">${row.total || '\u2014'}</span></td>`;
@@ -1290,6 +1313,69 @@ const BEST_N = 6;
       container.appendChild(table);
     }
 
+    // ── RENDER CHAMPIONSHIP SEEDING ─────────────────────────────────
+    // Starts from the same per-player data as the Standings tab
+    // (computeStandingsRows), then layers on the one-time Championship
+    // handicap and re-sorts by the resulting starting total — that order
+    // is the seed that drives Aug 22 pairings on the RSVP page.
+    async function renderChampionshipSeeding() {
+      await fetchScores();
+      const { rows } = computeStandingsRows();
+      const container = document.getElementById('champ-seed-content');
+      if (!container) return;
+
+      const seeded = rows
+        .filter(r => r.avg !== null)
+        .map(row => {
+          const champHcp     = getChampionshipHcp(row.name);
+          const startingTotal = row.total - champHcp;
+          const count         = row.counted.length;
+          const startingAvg   = count > 0 ? startingTotal / count : row.avg;
+          return { ...row, champHcp, startingTotal, startingAvg };
+        });
+
+      if (!seeded.length) {
+        container.innerHTML = `<p style="color:var(--muted);font-size:0.85rem;">Seeding appears here once regular-season scores are entered.</p>`;
+        return;
+      }
+
+      // Re-rank by starting avg (season avg minus the one-time championship
+      // hcp) so the credit can move a player ahead of someone in a higher
+      // tier — season rank stays the tiebreaker, matching every other seed.
+      seeded.sort((a, b) => {
+        const diff = Math.round(a.startingAvg * 100) - Math.round(b.startingAvg * 100);
+        if (diff !== 0) return diff;
+        return a.seasonRank - b.seasonRank;
+      });
+      seeded.forEach((row, i) => { row.seed = i + 1; });
+
+      const leaderTotal = seeded[0].startingTotal;
+
+      const rowsHtml = seeded.map(row => {
+        const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
+        const behind = row.startingTotal - leaderTotal;
+        const behindStr = behind <= 0 ? '—' : `+${behind}`;
+        return `<tr>
+          <td class="c"><span class="rank-num${row.seed <= 3 ? ' top' : ''}">${row.seed}</span></td>
+          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
+          <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
+          <td class="r hide-mobile"><span class="avg-val">${row.avg.toFixed(2)}</span></td>
+          <td class="r hide-mobile">${row.total}</td>
+          <td class="r stat-muted">−${row.champHcp}</td>
+          <td class="r"><span class="avg-val">${row.startingTotal}</span></td>
+          <td class="r stat-muted">${behindStr}</td>
+        </tr>`;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="champ-table">
+          <thead><tr>
+            <th class="c" style="width:52px;">Seed</th><th>Player</th><th class="c hide-mobile">Tier</th><th class="r hide-mobile">Season Adj. Avg</th><th class="r hide-mobile">Season Total</th><th class="r">Champ Hcp</th><th class="r">Starting Total</th><th class="r">Behind</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>`;
+    }
+
     // ── TABS ───────────────────────────────────────────────────────
     function showTab(name) {
       document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
@@ -1297,7 +1383,7 @@ const BEST_N = 6;
       document.getElementById('panel-' + name).classList.add('active');
       event.currentTarget.classList.add('active');
       if (name === 'weekly') renderWeekly();
-      if (name === 'championship') renderChampionship();
+      if (name === 'championship') { renderChampionship(); renderChampionshipSeeding(); }
     }
 
     // ── ADMIN ──────────────────────────────────────────────────────
@@ -1464,8 +1550,6 @@ const BEST_N = 6;
           <span class="place-lbl" style="font-family:var(--serif-display);color:var(--gold-pale);font-size:0.85rem;text-align:center;">${i + 1}</span>
           <input type="text" placeholder="Player name" value="${entry.name || name}" data-ci="${i}" data-field="name"
             style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;color:var(--cream);font-family:var(--sans);font-size:0.82rem;outline:none;">
-          <input type="text" placeholder="e.g. w/ Brad F9" value="${entry.note || ''}" data-ci="${i}" data-field="note"
-            style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;color:var(--muted);font-family:var(--sans);font-size:0.78rem;outline:none;">
           <input type="number" min="0" max="40" placeholder="F9" value="${entry.front || ''}" class="score-in" data-ci="${i}" data-field="front"
             style="background:var(--navy);border:1px solid var(--border);border-radius:var(--radius);padding:0.4rem 0.5rem;text-align:center;color:var(--gold-pale);font-family:var(--sans);font-size:0.9rem;font-weight:600;outline:none;">
           <input type="number" min="0" max="40" placeholder="B9" value="${entry.back || ''}" class="score-in" data-ci="${i}" data-field="back"
