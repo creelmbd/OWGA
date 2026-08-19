@@ -59,7 +59,7 @@
     .lb-panel.active { display: block; }
 
     /* Standings table */
-    .lb-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.88rem; }
+    .lb-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.88rem; min-width: 640px; }
     .lb-table th {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--gold); padding: 0.7rem 1rem;
@@ -123,6 +123,10 @@
 
     /* Championship panel */
     .champ-table { width: 100%; border-collapse: collapse; font-family: var(--sans); font-size: 0.88rem; margin-top: 1.5rem; }
+    /* Seeding table has more columns than the results table — force it to
+       overflow its .table-scroll wrapper on narrow screens instead of
+       squeezing every column down to nothing. */
+    .champ-table-wide { min-width: 620px; }
     .champ-table th {
       font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em;
       text-transform: uppercase; color: var(--gold); padding: 0.7rem 1rem;
@@ -487,14 +491,14 @@
               <tr>
                 <th class="c" style="width:52px;">Rank</th>
                 <th>Player</th>
-                <th class="c hide-mobile">Tier</th>
-                <th class="c hide-mobile">Season Rank</th>
+                <th class="c">Tier</th>
+                <th class="c">Season Rank</th>
                 <th class="r">Adj. Avg</th>
-                <th class="r hide-mobile">Adj. Total</th>
-                <th class="r hide-mobile">Raw Avg</th>
-                <th class="r hide-mobile">Raw Total</th>
+                <th class="r">Adj. Total</th>
+                <th class="r">Raw Avg</th>
+                <th class="r">Raw Total</th>
                 <th class="c">Played</th>
-                <th class="c hide-mobile">Dropped</th>
+                <th class="c">Dropped</th>
               </tr>
             </thead>
             <tbody id="standings-tbody"></tbody>
@@ -541,7 +545,7 @@
           <h2>Tier Assignments</h2>
         </div>
         <p style="font-size:0.86rem;color:var(--muted);margin-bottom:2rem;line-height:1.6;">
-          Players are seeded into three tiers based on prior season results. During regular season rounds, Tier B players receive a <strong style="color:#b0b0b0;">−1 stroke handicap</strong> per round and Tier C players receive a <strong style="color:#c07848;">−2 stroke handicap</strong>. Championship day is played straight up with no handicaps.
+          Players are seeded into three tiers based on prior season results. During regular season rounds, Tier B players receive a <strong style="color:#b0b0b0;">−1 stroke handicap</strong> per round and Tier C players receive a <strong style="color:#c07848;">−2 stroke handicap</strong>. Championship Day itself is scored straight up with no handicap — but entering it, Tier B and Tier C players also get a one-time Championship handicap (same −1/−2 rate) added on top of their season total, used to seed the Aug 22 pairings.
         </p>
 
         <div class="tier-section">
@@ -618,7 +622,7 @@
           <h3 style="margin:0.35rem 0 0.75rem;font-family:var(--serif-display);font-size:1.05rem;color:var(--gold-pale);">Seeding &amp; Pairings</h3>
           <p class="champ-format-note">
             <i class="fas fa-info-circle"></i>
-            Once the last regular round (Aug 21) is in, players are seeded for Aug 22 pairings by their final hdcp-adjusted season average — Tier B: −1/round, Tier C: −2/round. This seeding sets pairings only; it does not change how the Championship round itself is scored.
+            Once the last regular round (Aug 21) is in, players are seeded for Aug 22 pairings by their final hdcp-adjusted season total — Tier B: −1/round, Tier C: −2/round — plus a one-time Championship handicap on top (Tier B: −1, Tier C: −2). This seeding sets pairings only; it does not change how the Championship round itself is scored.
           </p>
           <div id="champ-seed-content" class="table-scroll"></div>
         </div>
@@ -946,8 +950,8 @@ const BEST_N = 6;
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
           <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
-          <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
-          <td class="c stat-muted hide-mobile">${row.seasonRank}</td>
+          <td class="c"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
+          <td class="c stat-muted">${row.seasonRank}</td>
           <td class="r">
             ${row.avg !== null
               ? `<span class="avg-val">${row.avg.toFixed(2)}</span>`
@@ -955,11 +959,11 @@ const BEST_N = 6;
                 ? `<span class="stat-muted" title="Tier seed average">${row.priorAvg.toFixed(0)}</span>`
                 : `<span class="stat-muted">\u2014</span>`}
           </td>
-          <td class="r stat-muted hide-mobile">${row.total || '\u2014'}</td>
-          <td class="r stat-muted hide-mobile">${row.rawAvg !== null ? row.rawAvg.toFixed(2) : '\u2014'}</td>
-          <td class="r stat-muted hide-mobile">${row.rawTotal || '\u2014'}</td>
+          <td class="r stat-muted">${row.total || '\u2014'}</td>
+          <td class="r stat-muted">${row.rawAvg !== null ? row.rawAvg.toFixed(2) : '\u2014'}</td>
+          <td class="r stat-muted">${row.rawTotal || '\u2014'}</td>
           <td class="c stat-muted">${row.played || '\u2014'}</td>
-          <td class="c stat-muted hide-mobile">${row.dropped.length || '\u2014'}</td>
+          <td class="c stat-muted">${row.dropped.length || '\u2014'}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -1358,9 +1362,9 @@ const BEST_N = 6;
         return `<tr>
           <td class="c"><span class="rank-num${row.seed <= 3 ? ' top' : ''}">${row.seed}</span></td>
           <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
-          <td class="c hide-mobile"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
-          <td class="r hide-mobile"><span class="avg-val">${row.avg.toFixed(2)}</span></td>
-          <td class="r hide-mobile">${row.total}</td>
+          <td class="c"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
+          <td class="r"><span class="avg-val">${row.avg.toFixed(2)}</span></td>
+          <td class="r">${row.total}</td>
           <td class="r stat-muted">−${row.champHcp}</td>
           <td class="r"><span class="avg-val">${row.startingTotal}</span></td>
           <td class="r stat-muted">${behindStr}</td>
@@ -1368,9 +1372,9 @@ const BEST_N = 6;
       }).join('');
 
       container.innerHTML = `
-        <table class="champ-table">
+        <table class="champ-table champ-table-wide">
           <thead><tr>
-            <th class="c" style="width:52px;">Seed</th><th>Player</th><th class="c hide-mobile">Tier</th><th class="r hide-mobile">Season Adj. Avg</th><th class="r hide-mobile">Season Total</th><th class="r">Champ Hcp</th><th class="r">Starting Total</th><th class="r">Behind</th>
+            <th class="c" style="width:52px;">Seed</th><th>Player</th><th class="c">Tier</th><th class="r">Season Adj. Avg</th><th class="r">Season Total</th><th class="r">Champ Hcp</th><th class="r">Starting Total</th><th class="r">Behind</th>
           </tr></thead>
           <tbody>${rowsHtml}</tbody>
         </table>`;

@@ -1055,8 +1055,8 @@ h2 {
   .lb-tab { padding: 0.6rem 0.9rem; font-size: 0.76rem; white-space: nowrap; }
 
   .lb-table th, .lb-table td { padding: 0.6rem 0.6rem; font-size: 0.78rem; }
-  /* Hide less critical columns on small screens */
-  .lb-table .hide-mobile, .champ-table .hide-mobile { display: none; }
+  /* Columns used to be hidden here on small screens — now the table just
+     scrolls horizontally (via .table-scroll) so nothing is unreachable. */
 
   .weekly-scroll, .table-scroll { -webkit-overflow-scrolling: touch; }
   .weekly-table { font-size: 0.72rem; }
