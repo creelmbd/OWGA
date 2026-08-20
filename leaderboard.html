@@ -368,17 +368,16 @@
     .pm-body { padding: 2.25rem 2.25rem 2rem; }
 
     .pm-header {
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
       margin-bottom: 1.75rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
     }
     .pm-name { font-family: var(--serif-display); font-size: 1.85rem; color: var(--white); line-height: 1.15; }
-    .pm-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+    .pm-sub { font-size: 0.82rem; color: var(--muted); margin-top: 0.6rem; display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
     .pm-sub .dot-sep { opacity: 0.4; }
     .pm-rank-pill {
-      flex-shrink: 0; background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
+      background: rgba(201,168,76,0.1); border: 1px solid rgba(201,168,76,0.3);
       color: var(--gold-bright); font-family: var(--sans); font-size: 0.66rem; font-weight: 700;
-      letter-spacing: 0.09em; text-transform: uppercase; padding: 0.4rem 0.75rem;
-      border-radius: 999px; white-space: nowrap; text-align: center;
+      letter-spacing: 0.09em; text-transform: uppercase; padding: 0.3rem 0.7rem;
+      border-radius: 999px; white-space: nowrap;
     }
 
     .pm-hero { display: flex; align-items: flex-end; gap: 1rem; margin-bottom: 1.75rem; }
@@ -910,17 +909,28 @@ const BEST_N = 6;
         .map((s, i) => ({ raw: s, score: s > 0 ? s - hcp : 0, week: i }))
         .filter(x => x.raw > 0);
 
-      if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null, bestWeek: null, countedWeeks: new Set() };
+      if (attended.length === 0) return { counted: [], dropped: [], avg: null, total: 0, played: 0, bestScore: null, bestWeek: null, worstScore: null, worstWeek: null, bubbleScore: null, bubbleRaw: null, bubbleWeek: null, countedWeeks: new Set() };
 
       const sorted = [...attended].sort((a, b) => a.score - b.score);
       const countedWeeks = new Set(sorted.slice(0, bestN).map(x => x.week));
       const best = sorted[0];
+      const worst = sorted[sorted.length - 1];
+      // The worst *counted* round — the one on the bubble, first to get bumped
+      // once a better round is posted (already the whole story if nothing's
+      // been dropped yet: it's just their worst round so far).
+      const bubble = sorted[Math.min(bestN, sorted.length) - 1];
       const counted = attended.filter(x => countedWeeks.has(x.week));
       const dropped = attended.filter(x => !countedWeeks.has(x.week));
       const total = counted.reduce((s, x) => s + x.score, 0);
       const avg = counted.length > 0 ? (total / counted.length) : null;
 
-      return { counted, dropped, avg, total, played: attended.length, bestScore: best.score, bestWeek: best.week, countedWeeks };
+      return {
+        counted, dropped, avg, total, played: attended.length,
+        bestScore: best.score, bestWeek: best.week,
+        worstScore: worst.score, worstWeek: worst.week,
+        bubbleScore: bubble.score, bubbleRaw: bubble.raw, bubbleWeek: bubble.week,
+        countedWeeks
+      };
     }
 
     // ── RENDER STANDINGS ───────────────────────────────────────────
@@ -1230,14 +1240,12 @@ const BEST_N = 6;
       const content = document.getElementById('player-modal-content');
       content.innerHTML = `
         <div class="pm-header">
-          <div>
-            <div class="pm-name">${stats.name}${champPillHtml(stats.name)}</div>
-            <div class="pm-sub">
-              <span class="tier-badge ${tierClass}">${stats.tier}</span>
-              <span>${hcpLabel}</span>
-            </div>
+          <div class="pm-name">${stats.name}${champPillHtml(stats.name)}</div>
+          <div class="pm-sub">
+            <span class="tier-badge ${tierClass}">${stats.tier}</span>
+            <span>${hcpLabel}</span>
+            <span class="pm-rank-pill">Rank ${rankLabel}</span>
           </div>
-          <div class="pm-rank-pill">Rank ${rankLabel}</div>
         </div>
 
         <div class="pm-hero">
@@ -1250,9 +1258,11 @@ const BEST_N = 6;
 
         <div class="pm-stats-grid">
           <div class="pm-stat"><div class="pm-stat-val">${stats.played || 0}</div><div class="pm-stat-label">Played</div></div>
-          <div class="pm-stat"><div class="pm-stat-val">${stats.total || '—'}</div><div class="pm-stat-label">Adj. Total</div></div>
-          <div class="pm-stat"><div class="pm-stat-val">${stats.bestScore !== null ? stats.bestScore : '—'}</div><div class="pm-stat-label">Best Round</div></div>
           <div class="pm-stat"><div class="pm-stat-val">${stats.dropped.length || 0}</div><div class="pm-stat-label">Dropped</div></div>
+          <div class="pm-stat" title="Worst counted round (raw score) — first to drop if a better round is posted"><div class="pm-stat-val">${stats.bubbleRaw !== null ? stats.bubbleRaw : '—'}</div><div class="pm-stat-label">Droppable</div></div>
+          <div class="pm-stat"><div class="pm-stat-val">${stats.total || '—'}</div><div class="pm-stat-label">Adj. Total</div></div>
+          <div class="pm-stat" title="Lowest round this season"><div class="pm-stat-val">${stats.bestScore !== null ? stats.bestScore : '—'}</div><div class="pm-stat-label">Low</div></div>
+          <div class="pm-stat" title="Highest round this season"><div class="pm-stat-val">${stats.worstScore !== null ? stats.worstScore : '—'}</div><div class="pm-stat-label">High</div></div>
         </div>
 
         ${showTrend ? `<div class="pm-trend"><div class="pm-trend-label">Season Trend</div><div class="pm-trend-chart" id="pm-trend-chart"></div></div>` : ''}
