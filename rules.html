@@ -18,7 +18,24 @@
   <script src="scripts.js" defer></script>
 </head>
 <body>
-  <div id="header"></div>
+  <div id="header">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <div class="logo-container">
+      <img src="./imgs/logo_modern_transparent.png" alt="OWGA Logo" class="logo">
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav id="main-nav">
+      <ul>
+        <li><a href="index.html">League Info</a></li>
+        <li><a href="rules.html">Rules</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+        <li><a href="rsvp.html">RSVP</a></li>
+        <li><a href="champions.html">Champions</a></li>
+      </ul>
+    </nav>
+  </div>
 
   <main class="rules-content">
     <section>
@@ -113,6 +130,10 @@
     </section>
   </main>
 
-  <div id="footer"></div>
+  <div id="footer">
+    <div class="footer-bottom">
+      <p>&copy; 2025 OWGA Golf League &mdash; Okeana Whackers Golf Association</p>
+    </div>
+  </div>
 </body>
 </html>

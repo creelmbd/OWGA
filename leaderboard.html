@@ -404,7 +404,7 @@
       color: var(--muted); margin-bottom: 0.6rem;
     }
     .pm-trend-chart { width: 100%; }
-    .pm-trend-chart svg { display: block; }
+    .pm-trend-chart svg { display: block; width: 100%; height: auto; }
 
     .pm-rounds-title {
       font-size: 0.68rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
@@ -440,7 +440,24 @@
   </style>
 </head>
 <body>
-  <div id="header"></div>
+  <div id="header">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <div class="logo-container">
+      <img src="./imgs/logo_modern_transparent.png" alt="OWGA Logo" class="logo">
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav id="main-nav">
+      <ul>
+        <li><a href="index.html">League Info</a></li>
+        <li><a href="rules.html">Rules</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+        <li><a href="rsvp.html">RSVP</a></li>
+        <li><a href="champions.html">Champions</a></li>
+      </ul>
+    </nav>
+  </div>
 
   <main>
     <section class="hero">
@@ -557,9 +574,9 @@
             </div>
           </div>
           <div class="tier-players-grid">
-            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
-            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry</span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">1</span><span class="tier-player-name">Brad Minges<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span></span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">2</span><span class="tier-player-name">Randy Bulach<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span></span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
+            <div class="tier-player-row ta"><span class="tier-rank-num">3</span><span class="tier-player-name">Zak Curry<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span></span><span class="tier-handicap" style="color:var(--gold-muted);">scratch</span></div>
           </div>
         </div>
 
@@ -573,7 +590,7 @@
           </div>
           <div class="tier-players-grid">
             <div class="tier-player-row tb"><span class="tier-rank-num">4</span><span class="tier-player-name">Steve Griffin</span><span class="tier-handicap hcp-b">−1</span></div>
-            <div class="tier-player-row tb"><span class="tier-rank-num">5</span><span class="tier-player-name">Joe McConnell</span><span class="tier-handicap hcp-b">−1</span></div>
+            <div class="tier-player-row tb"><span class="tier-rank-num">5</span><span class="tier-player-name">Joe McConnell<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span></span><span class="tier-handicap hcp-b">−1</span></div>
             <div class="tier-player-row tb"><span class="tier-rank-num">6</span><span class="tier-player-name">Tony Bulach</span><span class="tier-handicap hcp-b">−1</span></div>
             <div class="tier-player-row tb"><span class="tier-rank-num">7</span><span class="tier-player-name">Joey Jacobs</span><span class="tier-handicap hcp-b">−1</span></div>
             <div class="tier-player-row tb"><span class="tier-rank-num">8</span><span class="tier-player-name">Brian Creelman</span><span class="tier-handicap hcp-b">−1</span></div>
@@ -718,7 +735,11 @@
     </div>
   </div>
 
-  <div id="footer"></div>
+  <div id="footer">
+    <div class="footer-bottom">
+      <p>&copy; 2025 OWGA Golf League &mdash; Okeana Whackers Golf Association</p>
+    </div>
+  </div>
 
   <script>
     // ── CONFIG ─────────────────────────────────────────────────────
@@ -740,6 +761,15 @@ const BEST_N = 6;
     // deleting their historical scores or tier/rank data. To bring someone back,
     // just remove their name here.
     const HIDDEN_PLAYERS = new Set(['Dave Eads', 'Cody Vatter']);
+
+    // Players with at least one championship win — keep in sync with the CHAMPIONS
+    // list in champions.html. Appended as a trophy pill after a past champion's name.
+    const PAST_CHAMPIONS = new Set(['Brad Minges', 'Zak Curry', 'Randy Bulach', 'Joe McConnell']);
+    function champPillHtml(name) {
+      return PAST_CHAMPIONS.has(name)
+        ? '<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span>'
+        : '';
+    }
 
     const ALL_PLAYERS = [
       'AJ Meyer','Andrew Meyer','Brad Minges','Brian Creelman','Bruce Tedesco',
@@ -949,7 +979,7 @@ const BEST_N = 6;
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
-          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
+          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}${champPillHtml(row.name)}</td>
           <td class="c"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
           <td class="c stat-muted">${row.seasonRank}</td>
           <td class="r">
@@ -1024,7 +1054,7 @@ const BEST_N = 6;
         const tr = document.createElement('tr');
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
         const hcp = getTierHandicap(row.name);
-        let cells = `<td class="left player-name-link" onclick="openPlayerCard('${row.name}')">${row.name}</td><td style="padding:0.45rem 0.35rem;"><span class="tier-badge ${tierClass}">${row.tier}</span></td>`;
+        let cells = `<td class="left player-name-link" onclick="openPlayerCard('${row.name}')">${row.name}${champPillHtml(row.name)}</td><td style="padding:0.45rem 0.35rem;"><span class="tier-badge ${tierClass}">${row.tier}</span></td>`;
 
         for (let w = 0; w <= Math.max(lastWeek, 0); w++) {
           if (rainoutWeeks[w]) {
@@ -1105,11 +1135,12 @@ const BEST_N = 6;
     }
 
     // Trend sparkline of adjusted scores across the season — up = better (lower score).
-    // `width` is the container's real rendered pixel width, so the viewBox maps 1:1 to
-    // screen pixels and circle markers stay circular instead of being stretched into ellipses.
-    function buildTrendSparkline(playedRounds, width) {
+    // Drawn on a fixed logical grid (W×H) and scaled to fit the container purely via CSS
+    // (width:100%; height:auto on the <svg>), so it always fits the viewport width with no
+    // horizontal scroll — no JS width measurement to get stale or wrong on some phones.
+    function buildTrendSparkline(playedRounds) {
       if (playedRounds.length < 2) return '';
-      const W = Math.max(width, 100), H = 56, PAD_X = 8, PAD_Y = 10;
+      const W = 300, H = 56, PAD_X = 8, PAD_Y = 10;
       const values = playedRounds.map(r => r.adj);
       const min = Math.min(...values), max = Math.max(...values);
       const span = max - min || 1;
@@ -1200,7 +1231,7 @@ const BEST_N = 6;
       content.innerHTML = `
         <div class="pm-header">
           <div>
-            <div class="pm-name">${stats.name}</div>
+            <div class="pm-name">${stats.name}${champPillHtml(stats.name)}</div>
             <div class="pm-sub">
               <span class="tier-badge ${tierClass}">${stats.tier}</span>
               <span>${hcpLabel}</span>
@@ -1238,8 +1269,7 @@ const BEST_N = 6;
       document.getElementById('player-modal').classList.add('active');
 
       if (showTrend) {
-        const chartEl = document.getElementById('pm-trend-chart');
-        chartEl.innerHTML = buildTrendSparkline(playedRounds, chartEl.clientWidth);
+        document.getElementById('pm-trend-chart').innerHTML = buildTrendSparkline(playedRounds);
       }
     }
 
@@ -1306,7 +1336,7 @@ const BEST_N = 6;
         tr.className = placeClass(row.rank);
         tr.innerHTML = `
           <td class="c"><span class="${placeNumClass(row.rank)}">${row.rank}</span></td>
-          <td style="font-weight:500;color:var(--white);">${row.name}</td>
+          <td style="font-weight:500;color:var(--white);">${row.name}${champPillHtml(row.name)}</td>
           <td class="c"><span class="champ-nine">${row.front || '\u2014'}</span></td>
           <td class="c"><span class="champ-nine">${row.back  || '\u2014'}</span></td>
           <td class="r"><span class="champ-total">${row.total || '\u2014'}</span></td>`;
@@ -1361,7 +1391,7 @@ const BEST_N = 6;
         const behindStr = behind <= 0 ? '—' : `+${behind}`;
         return `<tr>
           <td class="c"><span class="rank-num${row.seed <= 3 ? ' top' : ''}">${row.seed}</span></td>
-          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}</td>
+          <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}${champPillHtml(row.name)}</td>
           <td class="c"><span class="tier-badge ${tierClass}">${row.tier}</span></td>
           <td class="r"><span class="avg-val">${row.avg.toFixed(2)}</span></td>
           <td class="r">${row.total}</td>

@@ -1071,7 +1071,7 @@
     .tp-vs {
       font-size: 0.6rem;
       color: rgba(255,255,255,0.15);
-      padding-left: 42px;
+      text-align: center;
       letter-spacing: 0.06em;
     }
     .solo-note {
@@ -1123,7 +1123,24 @@
   </style>
 </head>
 <body>
-  <div id="header"></div>
+  <div id="header">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <div class="logo-container">
+      <img src="./imgs/logo_modern_transparent.png" alt="OWGA Logo" class="logo">
+    </div>
+    <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    <nav id="main-nav">
+      <ul>
+        <li><a href="index.html">League Info</a></li>
+        <li><a href="rules.html">Rules</a></li>
+        <li><a href="leaderboard.html">Leaderboard</a></li>
+        <li><a href="rsvp.html">RSVP</a></li>
+        <li><a href="champions.html">Champions</a></li>
+      </ul>
+    </nav>
+  </div>
 
   <main>
 
@@ -1189,7 +1206,11 @@
     </div>
   </main>
 
-  <div id="footer"></div>
+  <div id="footer">
+    <div class="footer-bottom">
+      <p>&copy; 2025 OWGA Golf League &mdash; Okeana Whackers Golf Association</p>
+    </div>
+  </div>
 
   <script>
   const SHEET_CSV_URL  = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRSZMDIpncWVdir9q51BOroY_7h27fuXAJJD2fJke7tZePz64r5j9zIBdVhwsj91T9NxhDsSClIcm6l/pub?gid=507810816&single=true&output=csv';
@@ -1222,6 +1243,15 @@
   // from the RSVP sheet below, without touching their rows in the sheet itself.
   // To bring someone back, just remove their name here.
   const HIDDEN_PLAYERS = new Set(['Dave Eads', 'Cody Vatter']);
+
+  // Players with at least one championship win — keep in sync with the CHAMPIONS
+  // list in champions.html. Appended as a trophy pill after a past champion's name.
+  const PAST_CHAMPIONS = new Set(['Brad Minges', 'Zak Curry', 'Randy Bulach', 'Joe McConnell']);
+  function champPillHtml(name) {
+    return PAST_CHAMPIONS.has(name)
+      ? '<span class="champ-pill" title="Past Champion"><img src="imgs/trophy-cutout.png" alt="Past Champion"></span>'
+      : '';
+  }
 
   // Season rank from prior year — drives pairing order
   // Rank 1 = best (pairs with last), rank 22 = lowest (pairs with first)
@@ -1728,7 +1758,7 @@
           const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
           html += `<div class="tee-player">
             <span class="tp-stat">${statStr}</span>
-            <span class="tp-name">${name}</span>
+            <span class="tp-name">${name}${champPillHtml(name)}</span>
             <span class="tp-tier ${tierCls}">${tier}</span>
           </div>`;
           if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
@@ -1762,7 +1792,7 @@
         <div class="attending-chips">`;
     allSorted.forEach(player => {
       const label = player.avg !== null ? player.avg.toFixed(2) : `#${player.seasonRank}`;
-      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}</span>`;
+      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}${champPillHtml(player.name)}</span>`;
     });
     html += `</div>`;
 
@@ -1774,7 +1804,7 @@
         </div>
         <div class="attending-chips">`;
       notAttending.forEach(name => {
-        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}${champPillHtml(name)}</span>`;
       });
       html += `</div>`;
     }
@@ -1833,7 +1863,7 @@
           const { statStr, subStr } = playerStatFn(player);
           html += `<div class="tee-player">
             <span class="tp-stat"><span class="tp-avg">${statStr}</span>${subStr ? `<span class="tp-total">${subStr}</span>` : ''}</span>
-            <span class="tp-name">${name}</span>
+            <span class="tp-name">${name}${champPillHtml(name)}</span>
             <span class="tp-tier ${tierCls}">${tier}</span>
           </div>`;
           if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
@@ -1868,7 +1898,7 @@
         </div>
         <div class="attending-chips">`;
     allSorted.forEach(player => {
-      html += `<span class="attending-chip"><span class="chip-rank">${labelFn(player)}</span>${player.name}</span>`;
+      html += `<span class="attending-chip"><span class="chip-rank">${labelFn(player)}</span>${player.name}${champPillHtml(player.name)}</span>`;
     });
     html += `</div>`;
 
@@ -1880,7 +1910,7 @@
         </div>
         <div class="attending-chips">`;
       notAttending.forEach(name => {
-        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}${champPillHtml(name)}</span>`;
       });
       html += `</div>`;
     }
@@ -2096,7 +2126,7 @@
           const statStr = avg !== null ? avg.toFixed(2) : `#${seasonRank}`;
           html += `<div class="tee-player">
             <span class="tp-stat">${statStr}</span>
-            <span class="tp-name">${name}</span>
+            <span class="tp-name">${name}${champPillHtml(name)}</span>
             <span class="tp-tier ${tierCls}">${tier}</span>
           </div>`;
           if (pli === 0 && players.length > 1) html += `<div class="tp-vs">with</div>`;
@@ -2130,7 +2160,7 @@
         <div class="attending-chips">`;
     allSorted.forEach(player => {
       const label = player.avg !== null ? player.avg.toFixed(2) : `#${player.seasonRank}`;
-      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}</span>`;
+      html += `<span class="attending-chip"><span class="chip-rank">${label}</span>${player.name}${champPillHtml(player.name)}</span>`;
     });
     html += `</div>`;
 
@@ -2142,7 +2172,7 @@
         </div>
         <div class="attending-chips">`;
       notAttending.forEach(name => {
-        html += `<span class="attending-chip" style="opacity:0.5;">${name}</span>`;
+        html += `<span class="attending-chip" style="opacity:0.5;">${name}${champPillHtml(name)}</span>`;
       });
       html += `</div>`;
     }
