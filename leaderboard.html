@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OWGA Golf League - Leaderboard</title>
+  <meta name="description" content="2026 season standings, weekly scores, and Championship results for the Okeana Whackers Golf Association.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="OWGA Golf League - Leaderboard">
+  <meta property="og:description" content="2026 season standings, weekly scores, and Championship results for the Okeana Whackers Golf Association.">
+  <meta property="og:url" content="https://www.owga.golf/leaderboard.html">
+  <meta property="og:image" content="https://www.owga.golf/imgs/logo_modern_transparent.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="apple-touch-icon" sizes="180x180" href="imgs/favicon/apple-touch-icon.png">
@@ -55,6 +62,30 @@
     }
     .lb-tab.active { color: var(--gold-bright); border-bottom-color: var(--gold-bright); }
     .lb-tab:hover:not(.active) { color: var(--cream); }
+
+    /* Admin — deliberately styled apart from the public content tabs
+       (outlined pill, not underlined) so it doesn't read as a normal section. */
+    .lb-tab-admin {
+      margin-left: auto;
+      align-self: center;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.4rem;
+    }
+    .lb-tab-admin:hover:not(.active) {
+      color: var(--cream);
+      border-color: var(--border-strong);
+      background: rgba(255,255,255,0.03);
+    }
+    .lb-tab-admin.active {
+      color: var(--gold-muted);
+      border-color: var(--border-strong);
+      background: var(--gold-glow);
+    }
     .lb-panel { display: none; }
     .lb-panel.active { display: block; }
 
@@ -474,7 +505,7 @@
         <button class="lb-tab" onclick="showTab('weekly')">Weekly Scores</button>
         <button class="lb-tab" onclick="showTab('tiers')">Tiers</button>
         <button class="lb-tab" onclick="showTab('championship')">Championship</button>
-        <button class="lb-tab" onclick="showTab('admin')" style="margin-left:auto;">
+        <button class="lb-tab lb-tab-admin" onclick="showTab('admin')">
           <i class="fas fa-lock" style="font-size:0.7rem;margin-right:0.4rem;"></i>Admin
         </button>
       </div>
@@ -736,7 +767,7 @@
 
   <div id="footer">
     <div class="footer-bottom">
-      <p>&copy; 2025 OWGA Golf League &mdash; Okeana Whackers Golf Association</p>
+      <p>&copy; 2026 OWGA Golf League &mdash; Okeana Whackers Golf Association</p>
     </div>
   </div>
 
