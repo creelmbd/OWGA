@@ -1545,11 +1545,13 @@
   }
 
   // Back-9 re-pairing: once every attending player's front-9 score is in,
-  // re-shuffle best-vs-worst using a running total = starting total (season
+  // re-shuffle worst-vs-best using the Adj Total — starting total (season
   // adjusted total minus the one-time Championship handicap, same number
-  // used to seed the front 9) + the front-9 raw score just played. The
-  // Championship handicap is not re-applied here — it was already folded
-  // into the starting total once, for the front-9 seed.
+  // used to seed the front 9) + the front-9 raw score just played, taken
+  // as-is (not averaged). Ties break on season rank, same as every other
+  // pairing round (see pairFromRanked). The Championship handicap is not
+  // re-applied here — it was already folded into the starting total once,
+  // for the front-9 seed.
   function buildBackNinePairings(attending, scoresData, champMap) {
     const effectiveBestN = getEffectiveBestN(scoresData);
     const withStats = attending.map(name => {
@@ -1558,11 +1560,14 @@
       const champHcp = getChampionshipHcp(name);
       const frontNine = parseInt(champMap[name]?.front) || 0;
 
-      let startingTotal = null, runningTotal = null, sortAvg = ph;
+      // Fallback for the edge case of no season data — scaled to the same
+      // order of magnitude as a real Adj Total (a running sum, not a
+      // per-round average) so it doesn't get sorted as if it were the best.
+      let startingTotal = null, runningTotal = null, sortAvg = ph * (effectiveBestN + 1);
       if (total !== null) {
         startingTotal = total - champHcp;
         runningTotal  = startingTotal + frontNine;
-        sortAvg       = count > 0 ? runningTotal / (count + 1) : startingTotal;
+        sortAvg       = runningTotal;
       }
 
       return {
@@ -1571,7 +1576,7 @@
         startingTotal,     // null if no season scores yet
         frontNine,
         runningTotal,      // null if no season scores yet
-        sortAvg,
+        sortAvg,            // = Adj Total, worst-to-best sort key
         seasonRank: SEASON_RANK[name] ?? 99
       };
     });

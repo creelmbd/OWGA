@@ -541,6 +541,8 @@
                 <th class="c">Tier</th>
                 <th class="c">Season Rank</th>
                 <th class="r">Adj. Avg</th>
+                <th class="r">F9</th>
+                <th class="r">B9</th>
                 <th class="r">Adj. Total</th>
                 <th class="r">Raw Avg</th>
                 <th class="r">Raw Total</th>
@@ -554,7 +556,7 @@
 
         <p class="section-note" id="standings-note">
           <i class="fas fa-info-circle"></i>
-          Standings based on best <span id="best-n-label">6</span> rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores. Players without 2026 scores are seeded by tier (A: 36, B: 38, C: 40) shown in grey.<span id="rainout-note-inline"></span>
+          Standings based on best <span id="best-n-label">6</span> rounds. Tier B players receive −1 per round, Tier C receive −2. Averages reflect handicap-adjusted scores. Players without 2026 scores are seeded by tier (A: 36, B: 38, C: 40) shown in grey.<span id="rainout-note-inline"></span> On Championship Day, F9 and B9 show today's raw front/back 9 scores as they're entered — each is added straight onto the Adj. Total (which already has the one-time Championship handicap applied) once posted, and that running total is what's used to re-seed pairings for the back 9. Once any Championship score is posted, this table re-sorts by Adj. Total instead of Adj. Avg, with season rank as the tiebreak.
         </p>
       </div>
 
@@ -660,7 +662,11 @@
         </div>
         <p class="champ-format-note">
           <i class="fas fa-info-circle"></i>
-          18-hole scramble · Partners switch at the turn · No handicap on the round itself · Ranked by individual 18-hole total
+          18-hole scramble · Partners switch at the turn · No handicap on the round itself · Ranked by Adj Total
+        </p>
+        <p class="champ-format-note">
+          <i class="fas fa-info-circle"></i>
+          Adj Total = starting total (season adj. total minus the one-time Championship handicap) plus Front 9 once posted, plus Back 9 once posted — the running number that ranks this table and re-seeds pairings for the back 9.
         </p>
         <div id="champ-content" class="table-scroll"></div>
 
@@ -1007,8 +1013,49 @@ const BEST_N = 6;
 
     async function renderStandings() {
       await fetchScores();
+      await fetchChampData();
       const data = loadData();
-      const { rows, effectiveBestN, rainoutCount } = computeStandingsRows();
+      const { rows: baseRows, effectiveBestN, rainoutCount } = computeStandingsRows();
+
+      const champByName = {};
+      loadChampData().forEach(e => { if (e.name) champByName[e.name] = e; });
+
+      // Layer today's Championship F9/B9 onto each row's Adj Total (starting
+      // total = season Adj Total minus the one-time Championship handicap,
+      // plus F9/B9 as they're posted \u2014 same figure as the Championship tab).
+      let rows = baseRows.map(row => {
+        const champEntry = champByName[row.name] || {};
+        const f9 = parseInt(champEntry.front) || null;
+        const b9 = parseInt(champEntry.back) || null;
+        const adjTotal = row.avg !== null
+          ? (row.total - getChampionshipHcp(row.name)) + (f9 || 0) + (b9 || 0)
+          : null;
+        return { ...row, f9, b9, adjTotal };
+      });
+
+      // Once any Championship score is in, the table re-sorts by Adj Total
+      // (worst-to-best is irrelevant here \u2014 this is a leaderboard, so
+      // lowest/best first) instead of season Adj Avg, with season rank as
+      // the tiebreak, and ranks are recomputed to match.
+      const champInProgress = rows.some(r => r.f9 !== null || r.b9 !== null);
+      if (champInProgress) {
+        rows = rows.slice().sort((a, b) => {
+          const aKey = a.adjTotal !== null ? a.adjTotal : (a.priorAvg !== null ? a.priorAvg + 1000 : 9999);
+          const bKey = b.adjTotal !== null ? b.adjTotal : (b.priorAvg !== null ? b.priorAvg + 1000 : 9999);
+          if (aKey !== bKey) return aKey - bKey;
+          return a.seasonRank - b.seasonRank;
+        });
+        let rank = 1;
+        rows.forEach((row, i) => {
+          const tiedWithPrev = i > 0 && row.adjTotal !== null && rows[i-1].adjTotal === row.adjTotal;
+          row.displayRank = row.adjTotal !== null ? (tiedWithPrev ? rows[i-1].displayRank : rank) : null;
+          row.tied = row.displayRank !== null && (
+            (i > 0 && rows[i-1].adjTotal === row.adjTotal) ||
+            (i < rows.length - 1 && rows[i+1] && rows[i+1].adjTotal === row.adjTotal)
+          );
+          if (row.adjTotal !== null) rank = i + 2;
+        });
+      }
 
       const tbody = document.getElementById('standings-tbody');
       tbody.innerHTML = '';
@@ -1018,6 +1065,7 @@ const BEST_N = 6;
         const displayRank = row.displayRank !== null ? row.displayRank : '\u2014';
         const rankClass = isTop ? 'rank-num top' : 'rank-num';
         const tierClass = row.tier === 'A' ? 'tier-a' : row.tier === 'B' ? 'tier-b' : 'tier-c';
+
         tr.innerHTML = `
           <td class="c"><span class="${rankClass}">${displayRank}</span></td>
           <td class="player-name-cell" onclick="openPlayerCard('${row.name}')">${row.name}${champPillHtml(row.name)}</td>
@@ -1030,7 +1078,9 @@ const BEST_N = 6;
                 ? `<span class="stat-muted" title="Tier seed average">${row.priorAvg.toFixed(0)}</span>`
                 : `<span class="stat-muted">\u2014</span>`}
           </td>
-          <td class="r stat-muted">${row.total || '\u2014'}</td>
+          <td class="r">${row.f9 !== null ? `<span class="avg-val">${row.f9}</span>` : `<span class="stat-muted">\u2014</span>`}</td>
+          <td class="r">${row.b9 !== null ? `<span class="avg-val">${row.b9}</span>` : `<span class="stat-muted">\u2014</span>`}</td>
+          <td class="r stat-muted">${row.adjTotal !== null ? row.adjTotal : '\u2014'}</td>
           <td class="r stat-muted">${row.rawAvg !== null ? row.rawAvg.toFixed(2) : '\u2014'}</td>
           <td class="r stat-muted">${row.rawTotal || '\u2014'}</td>
           <td class="c stat-muted">${row.played || '\u2014'}</td>
@@ -1324,6 +1374,7 @@ const BEST_N = 6;
 
     // ── RENDER CHAMPIONSHIP ────────────────────────────────────────
     async function renderChampionship() {
+      await fetchScores();
       await fetchChampData();
       const champ = loadChampData();
       const container = document.getElementById('champ-content');
@@ -1338,15 +1389,27 @@ const BEST_N = 6;
         return;
       }
 
+      const { rows: standingsRows } = computeStandingsRows();
+      const standingsByName = {};
+      standingsRows.forEach(r => { standingsByName[r.name] = r; });
+
       const rows = champ
         .filter(e => e.name)
-        .map(e => ({
-          name: e.name,
-          front: parseInt(e.front) || 0,
-          back:  parseInt(e.back)  || 0,
-          total: (parseInt(e.front) || 0) + (parseInt(e.back) || 0)
-        }))
+        .map(e => {
+          const front = parseInt(e.front) || 0;
+          const back  = parseInt(e.back)  || 0;
+          const sRow = standingsByName[e.name];
+          const startingTotal = (sRow && sRow.total) ? sRow.total - getChampionshipHcp(e.name) : null;
+          const adjTotal = startingTotal !== null ? startingTotal + front + back : null;
+          return { name: e.name, front, back, total: front + back, startingTotal, adjTotal };
+        })
         .sort((a, b) => {
+          // Rank by Adj Total (starting total + front + back as they're posted) once
+          // it's known — falls back to raw 18-hole total only for the edge case of a
+          // player with no season data to seed a starting total from.
+          if (a.adjTotal !== null && b.adjTotal !== null) return a.adjTotal - b.adjTotal;
+          if (a.adjTotal !== null) return -1;
+          if (b.adjTotal !== null) return 1;
           if (!a.total && !b.total) return 0;
           if (!a.total) return 1;
           if (!b.total) return -1;
@@ -1356,7 +1419,11 @@ const BEST_N = 6;
       let rank = 1;
       const ranked = [];
       rows.forEach((row, i) => {
-        const displayRank = (i > 0 && row.total === rows[i-1].total && row.total > 0) ? ranked[i-1].rank : rank;
+        const tiedWithPrev = i > 0 && (
+          (row.adjTotal !== null && row.adjTotal === rows[i-1].adjTotal) ||
+          (row.adjTotal === null && rows[i-1].adjTotal === null && row.total === rows[i-1].total && row.total > 0)
+        );
+        const displayRank = tiedWithPrev ? ranked[i-1].rank : rank;
         rank = i + 2;
         ranked.push({ ...row, rank: displayRank });
       });
@@ -1368,7 +1435,7 @@ const BEST_N = 6;
       table.className = 'champ-table';
       table.innerHTML = `<thead><tr>
         <th class="c" style="width:52px;">Place</th>
-        <th>Player</th><th class="c">Front 9</th><th class="c">Back 9</th><th class="r">Total</th>
+        <th>Player</th><th class="r">Adj Total</th><th class="c">Front 9</th><th class="c">Back 9</th><th class="r">Total</th>
       </tr></thead>`;
 
       const tbody = document.createElement('tbody');
@@ -1378,9 +1445,10 @@ const BEST_N = 6;
         tr.innerHTML = `
           <td class="c"><span class="${placeNumClass(row.rank)}">${row.rank}</span></td>
           <td style="font-weight:500;color:var(--white);">${row.name}${champPillHtml(row.name)}</td>
+          <td class="r"><span class="champ-total">${row.adjTotal !== null ? row.adjTotal : '\u2014'}</span></td>
           <td class="c"><span class="champ-nine">${row.front || '\u2014'}</span></td>
           <td class="c"><span class="champ-nine">${row.back  || '\u2014'}</span></td>
-          <td class="r"><span class="champ-total">${row.total || '\u2014'}</span></td>`;
+          <td class="r"><span class="avg-val">${row.total || '\u2014'}</span></td>`;
         tbody.appendChild(tr);
       });
       table.appendChild(tbody);
@@ -1457,8 +1525,9 @@ const BEST_N = 6;
       document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
       document.getElementById('panel-' + name).classList.add('active');
       event.currentTarget.classList.add('active');
+      if (name === 'standings') { _champCache = null; renderStandings(); }
       if (name === 'weekly') renderWeekly();
-      if (name === 'championship') { renderChampionship(); renderChampionshipSeeding(); }
+      if (name === 'championship') { _champCache = null; renderChampionship(); renderChampionshipSeeding(); }
     }
 
     // ── ADMIN ──────────────────────────────────────────────────────
@@ -1645,6 +1714,7 @@ const BEST_N = 6;
       const arr = Object.keys(entries).sort((a,b) => a-b).map(i => entries[i]);
       _champCache = arr;
       renderChampionship();
+      renderStandings();
 
       try {
         const res  = await fetch(APPS_SCRIPT_URL, {
